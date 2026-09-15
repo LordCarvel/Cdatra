@@ -3,7 +3,7 @@ package org.com.dev.carvel.user;
 import org.com.dev.carvel.address.Address;
 import org.com.dev.carvel.annotations.Entity;
 
-@Entity
+@Entity(tableNaame = "users")
 public class User {
     private int id;
     protected String name;
