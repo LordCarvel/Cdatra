@@ -16,7 +16,10 @@ public class Analize {
 
         }
         if (value.isAnnotationPresent(Entity.class)) {
-            System.out.println("Contains @Entity");
+            Entity entity = value.getAnnotation(Entity.class);
+
+            System.out.println("Contains @Entity, the table name is: " + entity.tableNaame());
+
         }
     }
 }
