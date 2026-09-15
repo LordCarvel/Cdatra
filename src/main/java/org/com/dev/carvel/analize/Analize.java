@@ -9,7 +9,7 @@ public class Analize {
 
         for (Field field : fields) {
             System.out.println("Field name: " + field.getName());
-            System.out.println("Field type: " + field.getType().getSimpleName());
+            System.out.println("Field type: " + field.getType());
         }
     }
 }
