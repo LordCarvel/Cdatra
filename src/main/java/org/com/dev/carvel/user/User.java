@@ -10,7 +10,7 @@ public class User {
     private @Column(columName = "id") int id;
     protected @Column(columName = "name") String name;
     protected @Column(columName = "user_email") String email;
-    private @Column(columName = "address") Address address;
+    private Address address;
     protected String temporary;
 
     public User (int id, String name, String email, Address address, String temporary) {

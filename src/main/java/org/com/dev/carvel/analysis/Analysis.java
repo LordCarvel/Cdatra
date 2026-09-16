@@ -19,8 +19,6 @@ public class Analysis {
                 Column column = field.getAnnotation(Column.class);
 
                 columns.add(new ColumnDefinition(column.columName(), field.getType()));
-
-                System.out.println("column name: " + column.columName() + "|| column type: "+ field.getType());
             }
         }
 
