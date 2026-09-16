@@ -11,6 +11,8 @@ import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -36,5 +38,11 @@ public class Main {
 
         SqlExecutor sqlExecutor = new SqlExecutor();
         sqlExecutor.execute(connection, sql);
+
+        DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+        ResultSet resultSet = databaseMetaData.getTables(null, null, "USERS", new String[]{"TABLE"});
+
+        System.out.println(resultSet.next());
     }
 }
