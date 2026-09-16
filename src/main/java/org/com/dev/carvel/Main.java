@@ -9,10 +9,12 @@ import org.com.dev.carvel.sql.TypeMapper;
 import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
         SchemaBuilder schemaBuilder = new SchemaBuilder();
         Analysis analize = new Analysis();
@@ -24,5 +26,11 @@ public class Main {
         SqlGenerator sqlGenerator = new SqlGenerator();
 
         sqlGenerator.createTable(table);
+
+        DatabaseConnection databaseConnection = new DatabaseConnection();
+
+        Connection connection = databaseConnection.connection("jdbc:h2:mem:cdatra", "sa", "");
+
+        System.out.println(connection);
     }
 }

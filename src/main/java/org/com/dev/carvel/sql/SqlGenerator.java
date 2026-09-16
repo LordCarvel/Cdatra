@@ -20,7 +20,7 @@ public class SqlGenerator {
 
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
-        for (int i = 0; i <= columns.size(); ) {
+        for (int i = 0; i < columns.size(); ) {
             ColumnDefinition columnDefinition = columns.get(i);
 
             String columnName = columnDefinition.getName();
