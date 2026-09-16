@@ -55,5 +55,9 @@ public class Main {
         for (Row row : rows) {
             System.out.println(row.getColumnName() + " + " + row.getValue());
         }
+
+        String sqlInsert = sqlGenerator.insert(table, rows);
+
+        System.out.println(sqlInsert);
     }
 }
