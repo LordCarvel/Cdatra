@@ -31,8 +31,8 @@ public class Main {
 
         List<Row> rows = new ArrayList<>();
 
-        rows.add(new Row(null, "Carvel"));
-        rows.add(new Row("id", 0));
+        rows.add(new Row("name", "Carvel"));
+        rows.add(null);
 
         SqlGenerator sqlGenerator =
                 new SqlGenerator();

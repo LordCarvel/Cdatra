@@ -58,6 +58,21 @@ public class SqlGenerator {
 
         for (Row row : rows) {
 
+            if (row == null) {
+                throw new IllegalArgumentException(
+                        "Insert row cannot be null"
+                );
+            }
+
+            if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+                throw new IllegalArgumentException(
+                        "Column name cannot be null or blank"
+                );
+            }
+        }
+
+        for (Row row : rows) {
+
             if (row.getColumnName() == null || row.getColumnName().isBlank()) {
                 throw new IllegalArgumentException(
                         "Column name cannot be null or blank"
