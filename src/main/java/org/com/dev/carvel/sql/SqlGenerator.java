@@ -67,6 +67,12 @@ public class SqlGenerator {
 
             Class<?> javaType = columnDefinition.getType();
 
+            if (javaType == null) {
+                throw new IllegalArgumentException(
+                        "Column type cannot be null"
+                );
+            }
+
             SqlType sqlType = typeMapper.map(javaType);
 
             String columnSql = columnName + " " + sqlType;

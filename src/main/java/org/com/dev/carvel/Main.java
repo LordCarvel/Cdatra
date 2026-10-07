@@ -23,7 +23,7 @@ public class Main {
 
         List<ColumnDefinition> columns = new ArrayList<>();
 
-        columns.add(new ColumnDefinition(null, int.class));
+        columns.add(new ColumnDefinition("id", null));
 
         Table table = new Table("users", columns);
 
