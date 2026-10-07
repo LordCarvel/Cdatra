@@ -264,4 +264,21 @@ public class SqlGenerator {
 
         return sql.toString();
     }
+
+    public String selectAll (Table table) {
+
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Select table cannot be null"
+            );
+        }
+
+        if (table.getName() == null || table.getName().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Table name cannot be null or blank"
+            );
+        }
+
+        return "SELECT * FROM " + table.getName() + ";";
+    }
 }
