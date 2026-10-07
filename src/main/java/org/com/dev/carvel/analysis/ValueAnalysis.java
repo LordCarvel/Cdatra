@@ -9,6 +9,11 @@ import java.util.List;
 
 public class ValueAnalysis {
     public List<Row> analyze(Object value) throws IllegalArgumentException, IllegalAccessException {
+        if (value == null) {
+            throw new IllegalArgumentException("Analyzed value cannot be null");
+        }
+        // Reuse metadata validation when this class is called on its own.
+        new Analysis().analize(value.getClass());
         Field[] fields = value.getClass().getDeclaredFields();
 
         List<Row> rows = new ArrayList<>();
