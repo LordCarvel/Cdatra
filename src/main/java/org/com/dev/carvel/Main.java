@@ -32,12 +32,12 @@ public class Main {
         List<Row> rows = new ArrayList<>();
 
         rows.add(new Row("name", "Carvel"));
-        rows.add(null);
+
 
         SqlGenerator sqlGenerator =
                 new SqlGenerator();
 
-        String sqlInsert = sqlGenerator.insert(table, rows);
+        String sqlInsert = sqlGenerator.insert(null, rows);
 
         System.out.println(sqlInsert);
     }

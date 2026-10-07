@@ -50,6 +50,18 @@ public class SqlGenerator {
 
     public String insert(Table table, List<Row> rows) {
 
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Insert table cannot be null"
+            );
+        }
+
+        if (rows == null) {
+            throw new IllegalArgumentException(
+                    "Insert rows cannot be null"
+            );
+        }
+
         if (rows.isEmpty()) {
             throw new IllegalArgumentException(
                     "Insert requires at least one row"
