@@ -5,6 +5,7 @@ import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.table.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SqlGenerator {
@@ -52,6 +53,28 @@ public class SqlGenerator {
         sql.append("INSERT INTO ");
         sql.append(table.getName());
         sql.append(" (");
+
+        List<String> seenColumns = new ArrayList<>();
+
+        for (Row row : rows) {
+
+            boolean duplicated = false;
+
+            for (String seenColumn : seenColumns) {
+
+                if (row.getColumnName().equalsIgnoreCase(seenColumn)) {
+                    duplicated = true;
+                }
+            }
+
+            if (duplicated) {
+                throw new IllegalArgumentException(
+                        "Duplicate column in insert: " + row.getColumnName()
+                );
+            }
+
+            seenColumns.add(row.getColumnName());
+        }
 
         for (Row row : rows) {
 

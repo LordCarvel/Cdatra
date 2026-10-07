@@ -31,9 +31,9 @@ public class Main {
 
         List<Row> rows = new ArrayList<>();
 
-        rows.add(new Row("user_email", "carvel@gmail.com"));
+        rows.add(new Row("name", "joão"));
         rows.add(new Row("id", 0));
-        rows.add(new Row("unknown_column", "teste"));
+        rows.add(new Row("name", "carvel "));
 
         SqlGenerator sqlGenerator =
                 new SqlGenerator();
