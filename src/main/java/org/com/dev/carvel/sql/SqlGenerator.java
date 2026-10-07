@@ -47,6 +47,8 @@ public class SqlGenerator {
             );
         }
 
+        List<String> seenColumns = new ArrayList<>();
+
         for (int i = 0; i < columns.size(); ) {
 
             ColumnDefinition columnDefinition = columns.get(i);
@@ -64,6 +66,23 @@ public class SqlGenerator {
                         "Column name cannot be null or blank"
                 );
             }
+
+            boolean duplicated = false;
+
+            for (String seenColumn : seenColumns) {
+
+                if (columnName.equalsIgnoreCase(seenColumn)) {
+                    duplicated = true;
+                }
+            }
+
+            if (duplicated) {
+                throw new IllegalArgumentException(
+                        "Duplicate column in table: " + columnName
+                );
+            }
+
+            seenColumns.add(columnName);
 
             Class<?> javaType = columnDefinition.getType();
 

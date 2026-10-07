@@ -23,10 +23,14 @@ public class Main {
 
         List<ColumnDefinition> columns = new ArrayList<>();
 
-        columns.add(new ColumnDefinition("id", null));
+        columns.add(new ColumnDefinition("id", int.class));
+        columns.add(new ColumnDefinition("name", String.class));
+        columns.add(new ColumnDefinition("id", int.class));
 
         Table table = new Table("users", columns);
 
-        System.out.println(sqlGenerator.createTable(table));
+        System.out.println(
+                sqlGenerator.createTable(table)
+        );
     }
 }
