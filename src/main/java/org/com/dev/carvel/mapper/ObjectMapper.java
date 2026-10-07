@@ -14,7 +14,27 @@ public class ObjectMapper {
     public Object map (List<Row> rows, Class<?> type) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
 
-        Constructor<?> constructor = type.getDeclaredConstructor();
+        if (rows == null || rows.isEmpty()) {
+            throw new IllegalArgumentException("Rows cannot be null or empty");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Mapped type cannot be null");
+        }
+        for (Row row : rows) {
+            if (row == null) {
+                throw new IllegalArgumentException("Mapped row cannot be null");
+            }
+            if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+                throw new IllegalArgumentException("Mapped column name cannot be null or blank");
+            }
+        }
+
+        Constructor<?> constructor;
+        try {
+            constructor = type.getDeclaredConstructor();
+        } catch (NoSuchMethodException exception) {
+            throw new NoSuchMethodException("Mapped type requires a no-argument constructor: " + type.getName());
+        }
         Object object = constructor.newInstance();
         Field[] fields = type.getDeclaredFields();
 
