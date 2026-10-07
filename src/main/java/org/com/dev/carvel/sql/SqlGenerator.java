@@ -84,6 +84,17 @@ public class SqlGenerator {
 
                 if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
                     found = true;
+
+                    SqlType expectedType =  typeMapper.map(columnDefinition.getType());
+
+                    SqlType receivedType = typeMapper.map(row.getValue().getClass());
+
+                    if (expectedType != receivedType) {
+
+                        throw new IllegalArgumentException(
+                                "Invalid value type for column: " + row.getColumnName()
+                        );
+                    }
                 }
             }
 
