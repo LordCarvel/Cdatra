@@ -1,6 +1,7 @@
 package org.com.dev.carvel.analysis;
 
 import org.com.dev.carvel.annotations.Column;
+import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.row.Row;
 
 import java.lang.reflect.Field;
@@ -9,10 +10,12 @@ import java.util.List;
 
 public class ValueAnalysis {
     public List<Row> analyze(Object value) throws IllegalArgumentException, IllegalAccessException {
+
         if (value == null) {
+
             throw new IllegalArgumentException("Analyzed value cannot be null");
         }
-        // Reuse metadata validation when this class is called on its own.
+
         new Analysis().analize(value.getClass());
         Field[] fields = value.getClass().getDeclaredFields();
 
@@ -32,5 +35,44 @@ public class ValueAnalysis {
         }
 
         return rows;
+    }
+
+    public Row analyzeId (Object value) throws IllegalAccessException {
+
+        if (value == null) {
+
+            throw new IllegalArgumentException("Analyzed value cannot be null");
+        }
+
+        Field[] fields = value.getClass().getDeclaredFields();
+
+        for (Field field: fields) {
+
+            if (field.isAnnotationPresent(Id.class)) {
+
+                if (!field.isAnnotationPresent(Column.class)) {
+
+                    throw new IllegalArgumentException(
+                            "@Id field must also be annotated with @Column"
+                    );
+                }
+
+                Column column = field.getAnnotation(Column.class);
+
+                field.setAccessible(true);
+
+                Object fieldValue = field.get(value);
+
+                return new Row(
+                        column.columName(),
+                        fieldValue
+                );
+            }
+        }
+
+        throw new IllegalArgumentException(
+
+                "Entity does not contain an @Id field"
+        );
     }
 }

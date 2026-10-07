@@ -19,16 +19,14 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        // 1. Analisa a entidade
         Analysis analysis = new Analysis();
 
         List<ColumnDefinition> columns =
                 analysis.analize(User.class);
 
         String tableName =
-                analysis.analizeTableName(User.class);
+                analysis.analyzeTableName(User.class);
 
-        // 2. Constrói a representação da tabela
         SchemaBuilder schemaBuilder =
                 new SchemaBuilder();
 
@@ -38,14 +36,12 @@ public class Main {
                         columns
                 );
 
-        // 3. Gera o CREATE TABLE
         SqlGenerator sqlGenerator =
                 new SqlGenerator();
 
         String createTableSql =
                 sqlGenerator.createTable(table);
 
-        // 4. Abre a conexão
         DatabaseConnection databaseConnection =
                 new DatabaseConnection();
 
@@ -56,7 +52,6 @@ public class Main {
                         ""
                 );
 
-        // 5. Cria a tabela
         SqlExecutor sqlExecutor =
                 new SqlExecutor();
 
@@ -65,7 +60,6 @@ public class Main {
                 createTableSql
         );
 
-        // 6. Cria primeiro usuário
         User user1 =
                 new User(
                         0,
@@ -79,7 +73,6 @@ public class Main {
                         "temporary"
                 );
 
-        // 7. Cria segundo usuário
         User user2 =
                 new User(
                         1,
@@ -100,7 +93,6 @@ public class Main {
         List<Row> user1Rows =
                 valueAnalysis.analyze(user1);
 
-        // 9. Gera e executa INSERT
         String user1InsertSql =
                 sqlGenerator.insert(
                         table,
@@ -112,11 +104,9 @@ public class Main {
                 user1InsertSql
         );
 
-        // 10. Extrai os valores do segundo usuário
         List<Row> user2Rows =
                 valueAnalysis.analyze(user2);
 
-        // 11. Gera e executa INSERT
         String user2InsertSql =
                 sqlGenerator.insert(
                         table,
@@ -128,20 +118,17 @@ public class Main {
                 user2InsertSql
         );
 
-        // 12. Gera SELECT automaticamente
         String selectSql =
                 sqlGenerator.selectAll(table);
 
         System.out.println(selectSql);
 
-        // 13. Executa o SELECT
         List<List<Row>> result =
                 sqlExecutor.query(
                         connection,
                         selectSql
                 );
 
-        // 14. Converte cada registro do banco em User
         ObjectMapper objectMapper =
                 new ObjectMapper();
 
@@ -153,12 +140,13 @@ public class Main {
                             User.class
                     );
 
+            Row idRow =
+                    valueAnalysis.analyzeId(loadedUser);
+
             System.out.println(
-                    loadedUser.getId()
-                            + " | "
-                            + loadedUser.getName()
-                            + " | "
-                            + loadedUser.getEmail()
+                    idRow.getColumnName()
+                            + " = "
+                            + idRow.getValue()
             );
         }
 

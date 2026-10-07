@@ -68,7 +68,7 @@ public class Analysis {
         return columns;
     }
 
-    public String analizeTableName (Class<?> value) {
+    public String analyzeTableName (Class<?> value) {
 
         if (value == null) {
             throw new IllegalArgumentException(
