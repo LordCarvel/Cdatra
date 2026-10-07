@@ -1,6 +1,5 @@
 package org.com.dev.carvel.sql;
 
-
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.table.Table;
@@ -9,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SqlGenerator {
+
     private final TypeMapper typeMapper = new TypeMapper();
 
-    public String createTable (Table table) {
+    public String createTable(Table table) {
+
         String tableName = table.getName();
 
         StringBuilder sql = new StringBuilder();
@@ -23,6 +24,7 @@ public class SqlGenerator {
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
         for (int i = 0; i < columns.size(); ) {
+
             ColumnDefinition columnDefinition = columns.get(i);
 
             String columnName = columnDefinition.getName();
@@ -34,7 +36,7 @@ public class SqlGenerator {
 
             sql.append(columnSql);
 
-            if (i < columns.size() -  1) {
+            if (i < columns.size() - 1) {
                 sql.append(", ");
             }
 
@@ -46,7 +48,7 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String insert (Table table, List<Row> rows) {
+    public String insert(Table table, List<Row> rows) {
 
         StringBuilder sql = new StringBuilder();
 
@@ -83,17 +85,23 @@ public class SqlGenerator {
             for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
 
                 if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
                     found = true;
 
-                    SqlType expectedType =  typeMapper.map(columnDefinition.getType());
+                    if (row.getValue() != null) {
 
-                    SqlType receivedType = typeMapper.map(row.getValue().getClass());
+                        SqlType expectedType =
+                                typeMapper.map(columnDefinition.getType());
 
-                    if (expectedType != receivedType) {
+                        SqlType receivedType =
+                                typeMapper.map(row.getValue().getClass());
 
-                        throw new IllegalArgumentException(
-                                "Invalid value type for column: " + row.getColumnName()
-                        );
+                        if (expectedType != receivedType) {
+
+                            throw new IllegalArgumentException(
+                                    "Invalid value type for column: " + row.getColumnName()
+                            );
+                        }
                     }
                 }
             }
@@ -127,25 +135,27 @@ public class SqlGenerator {
             Object value = rows.get(i).getValue();
 
             if (value == null) {
-                throw new IllegalArgumentException("Column value cannot be null");
-            }
 
-            SqlType sqlType = typeMapper.map(value.getClass());
-
-            if (sqlType == SqlType.VARCHAR) {
-
-                String stringValue = value.toString();
-
-                stringValue = stringValue.replace("'", "''");
-
-                sqlValue.append("'");
-                sqlValue.append(stringValue);
-                sqlValue.append("'");
+                sqlValue.append("NULL");
 
             } else {
 
-                sqlValue.append(value);
+                SqlType sqlType = typeMapper.map(value.getClass());
 
+                if (sqlType == SqlType.VARCHAR) {
+
+                    String stringValue = value.toString();
+
+                    stringValue = stringValue.replace("'", "''");
+
+                    sqlValue.append("'");
+                    sqlValue.append(stringValue);
+                    sqlValue.append("'");
+
+                } else {
+
+                    sqlValue.append(value);
+                }
             }
 
             if (i < rows.size() - 1) {
