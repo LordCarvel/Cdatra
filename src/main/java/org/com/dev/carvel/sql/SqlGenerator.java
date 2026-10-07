@@ -12,10 +12,28 @@ public class SqlGenerator {
     private final TypeMapper typeMapper = new TypeMapper();
 
     public String createTable(Table table) {
+        validateTable(table);
+        StringBuilder sql = new StringBuilder();
+        sql.append("CREATE TABLE ");
+        sql.append(table.getName());
+        sql.append(" (");
+        List<ColumnDefinition> columns = table.getColumnDefinitions();
+        for (int i = 0; i < columns.size(); i++) {
+            ColumnDefinition column = columns.get(i);
+            sql.append(column.getName()).append(" ").append(typeMapper.map(column.getType()));
+            if (i < columns.size() - 1) {
+                sql.append(", ");
+            }
+        }
+        sql.append(");");
+        return sql.toString();
+    }
+
+    private void validateTable(Table table) {
 
         if (table == null) {
             throw new IllegalArgumentException(
-                    "Create table cannot be null"
+                    "Table cannot be null"
             );
         }
 
@@ -26,12 +44,6 @@ public class SqlGenerator {
                     "Table name cannot be null or blank"
             );
         }
-
-        StringBuilder sql = new StringBuilder();
-
-        sql.append("CREATE TABLE ");
-        sql.append(tableName);
-        sql.append(" (");
 
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
@@ -49,9 +61,7 @@ public class SqlGenerator {
 
         List<String> seenColumns = new ArrayList<>();
 
-        for (int i = 0; i < columns.size(); ) {
-
-            ColumnDefinition columnDefinition = columns.get(i);
+        for (ColumnDefinition columnDefinition : columns) {
 
             if (columnDefinition == null) {
                 throw new IllegalArgumentException(
@@ -92,22 +102,8 @@ public class SqlGenerator {
                 );
             }
 
-            SqlType sqlType = typeMapper.map(javaType);
-
-            String columnSql = columnName + " " + sqlType;
-
-            sql.append(columnSql);
-
-            if (i < columns.size() - 1) {
-                sql.append(", ");
-            }
-
-            i = i + 1;
+            typeMapper.map(javaType);
         }
-
-        sql.append(");");
-
-        return sql.toString();
     }
 
     public String insert(Table table, List<Row> rows) {
@@ -145,14 +141,7 @@ public class SqlGenerator {
             }
         }
 
-        for (Row row : rows) {
-
-            if (row.getColumnName() == null || row.getColumnName().isBlank()) {
-                throw new IllegalArgumentException(
-                        "Column name cannot be null or blank"
-                );
-            }
-        }
+        validateTable(table);
 
         StringBuilder sql = new StringBuilder();
 
