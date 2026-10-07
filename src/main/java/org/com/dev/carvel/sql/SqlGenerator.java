@@ -35,11 +35,36 @@ public class SqlGenerator {
 
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
+        if (columns == null) {
+            throw new IllegalArgumentException(
+                    "Table columns cannot be null"
+            );
+        }
+
+        if (columns.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Table requires at least one column"
+            );
+        }
+
         for (int i = 0; i < columns.size(); ) {
 
             ColumnDefinition columnDefinition = columns.get(i);
 
+            if (columnDefinition == null) {
+                throw new IllegalArgumentException(
+                        "Table column cannot be null"
+                );
+            }
+
             String columnName = columnDefinition.getName();
+
+            if (columnName == null || columnName.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Column name cannot be null or blank"
+                );
+            }
+
             Class<?> javaType = columnDefinition.getType();
 
             SqlType sqlType = typeMapper.map(javaType);

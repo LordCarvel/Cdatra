@@ -17,19 +17,16 @@ public class Main {
 
         Analysis analysis = new Analysis();
 
-        List<ColumnDefinition> columns =
-                analysis.analize(User.class);
-
         SchemaBuilder schemaBuilder = new SchemaBuilder();
-
-        List<Row> rows = new ArrayList<>();
-
-        rows.add(new Row("name", "Carvel"));
-
 
         SqlGenerator sqlGenerator =  new SqlGenerator();
 
-        Table table = new Table(null, columns);
+        List<ColumnDefinition> columns = new ArrayList<>();
+
+        columns.add(new ColumnDefinition(null, int.class));
+
+        Table table = new Table("users", columns);
+
         System.out.println(sqlGenerator.createTable(table));
     }
 }
