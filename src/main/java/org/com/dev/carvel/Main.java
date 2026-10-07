@@ -31,10 +31,6 @@ public class Main {
 
         List<Row> rows = new ArrayList<>();
 
-        rows.add(new Row("user_email", null));
-        rows.add(new Row("id", 0));
-        rows.add(new Row("name", "Carvel"));
-
         SqlGenerator sqlGenerator =
                 new SqlGenerator();
 

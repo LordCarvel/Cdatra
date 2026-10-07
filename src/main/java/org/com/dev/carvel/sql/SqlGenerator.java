@@ -50,6 +50,12 @@ public class SqlGenerator {
 
     public String insert(Table table, List<Row> rows) {
 
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Insert requires at least one row"
+            );
+        }
+
         StringBuilder sql = new StringBuilder();
 
         sql.append("INSERT INTO ");
