@@ -1,10 +1,12 @@
 package org.com.dev.carvel;
 
+import org.com.dev.carvel.address.Address;
 import org.com.dev.carvel.analysis.Analysis;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
 import org.com.dev.carvel.sql.SqlGenerator;
+import org.com.dev.carvel.sql.TypeMapper;
 import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
@@ -15,22 +17,10 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Analysis analysis = new Analysis();
-
-        SchemaBuilder schemaBuilder = new SchemaBuilder();
-
-        SqlGenerator sqlGenerator =  new SqlGenerator();
-
-        List<ColumnDefinition> columns = new ArrayList<>();
-
-        columns.add(new ColumnDefinition("id", int.class));
-        columns.add(new ColumnDefinition("name", String.class));
-        columns.add(new ColumnDefinition("id", int.class));
-
-        Table table = new Table("users", columns);
+        TypeMapper typeMapper = new TypeMapper();
 
         System.out.println(
-                sqlGenerator.createTable(table)
+                typeMapper.map(null)
         );
     }
 }

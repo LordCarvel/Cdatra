@@ -13,6 +13,7 @@ public class ObjectMapper {
 
     public Object map (List<Row> rows, Class<?> type) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
+
         Constructor<?> constructor = type.getDeclaredConstructor();
         Object object = constructor.newInstance();
         Field[] fields = type.getDeclaredFields();

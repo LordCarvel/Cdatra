@@ -2,6 +2,13 @@ package org.com.dev.carvel.sql;
 
 public class TypeMapper {
     public SqlType map (Class<?> type) {
+
+        if (type == null) {
+            throw new IllegalArgumentException(
+                    "Java type cannot be null"
+            );
+        }
+
         if (type == int.class || type == Integer.class) {
             return SqlType.INTEGER;
 
