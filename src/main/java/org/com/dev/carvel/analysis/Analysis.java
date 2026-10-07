@@ -2,6 +2,7 @@ package org.com.dev.carvel.analysis;
 
 import org.com.dev.carvel.annotations.Column;
 import org.com.dev.carvel.annotations.Entity;
+import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 
 import java.lang.reflect.Field;
@@ -11,20 +12,42 @@ import java.util.List;
 public class Analysis {
 
     public List<ColumnDefinition> analize (Class<?> value) {
+
         if (value == null) {
             throw new IllegalArgumentException("Analyzed type cannot be null");
         }
+
+        int idCount = 0;
+
         Field[] fields = value.getDeclaredFields();
 
         List<ColumnDefinition> columns = new ArrayList<>();
 
         for (Field field : fields) {
+
+            if (field.isAnnotationPresent(Id.class)) {
+
+                idCount = idCount + 1;
+
+                if (!field.isAnnotationPresent(Column.class)) {
+                    throw new IllegalArgumentException(
+                            "@Id field must also be annotated with @Column"
+                    );
+                }
+            }
+
+
             if (field.isAnnotationPresent(Column.class)) {
+
                 Column column = field.getAnnotation(Column.class);
                 String name = column.columName();
-                if (name.isBlank()) {
-                    throw new IllegalArgumentException("Column name cannot be blank");
+
+                if (name == null || name.isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Column name cannot be null or blank"
+                    );
                 }
+
                 for (ColumnDefinition existing : columns) {
                     if (name.equalsIgnoreCase(existing.getName())) {
                         throw new IllegalArgumentException("Duplicate column in entity: " + name);
@@ -33,6 +56,13 @@ public class Analysis {
 
                 columns.add(new ColumnDefinition(column.columName(), field.getType()));
             }
+        }
+
+        if (idCount > 1) {
+
+            throw new IllegalArgumentException(
+                    "Entity cannot contain more than one @Id field"
+            );
         }
 
         return columns;
