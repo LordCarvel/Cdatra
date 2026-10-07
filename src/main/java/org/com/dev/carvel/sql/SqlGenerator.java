@@ -56,6 +56,15 @@ public class SqlGenerator {
             );
         }
 
+        for (Row row : rows) {
+
+            if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+                throw new IllegalArgumentException(
+                        "Column name cannot be null or blank"
+                );
+            }
+        }
+
         StringBuilder sql = new StringBuilder();
 
         sql.append("INSERT INTO ");
