@@ -4,60 +4,99 @@ import org.com.dev.carvel.address.Address;
 import org.com.dev.carvel.analysis.Analysis;
 import org.com.dev.carvel.analysis.ValueAnalysis;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
+import org.com.dev.carvel.mapper.ObjectMapper;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
 import org.com.dev.carvel.sql.SqlExecutor;
 import org.com.dev.carvel.sql.SqlGenerator;
-import org.com.dev.carvel.sql.TypeMapper;
 import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws SQLException, IllegalAccessException {
+
+    public static void main(String[] args) throws Exception {
+
+        Analysis analysis = new Analysis();
+
+        List<ColumnDefinition> columns =
+                analysis.analize(User.class);
 
         SchemaBuilder schemaBuilder = new SchemaBuilder();
-        Analysis analize = new Analysis();
 
-        List<ColumnDefinition> columnDefinitions = analize.analize(User.class);
-        Table table = schemaBuilder.build("users", columnDefinitions);
+        Table table =
+                schemaBuilder.build("users", columns);
 
         SqlGenerator sqlGenerator = new SqlGenerator();
 
-        String sql = sqlGenerator.createTable(table);
+        String createTableSql =
+                sqlGenerator.createTable(table);
 
-        DatabaseConnection databaseConnection = new DatabaseConnection();
+        DatabaseConnection databaseConnection =
+                new DatabaseConnection();
 
-        Connection connection = databaseConnection.connection("jdbc:h2:mem:cdatra", "sa", "");
+        Connection connection =
+                databaseConnection.connection(
+                        "jdbc:h2:mem:cdatra",
+                        "sa",
+                        ""
+                );
 
-        System.out.println(connection);
+        SqlExecutor sqlExecutor =
+                new SqlExecutor();
 
+        sqlExecutor.execute(
+                connection,
+                createTableSql
+        );
 
-        SqlExecutor sqlExecutor = new SqlExecutor();
-        sqlExecutor.execute(connection, sql);
+        User user = new User(
+                0,
+                "Carvel",
+                "carvel@gmail.com",
+                new Address(
+                        "Some street",
+                        67,
+                        "Some city"
+                ),
+                "temporary"
+        );
 
-        DatabaseMetaData databaseMetaData = connection.getMetaData();
+        ValueAnalysis valueAnalysis =
+                new ValueAnalysis();
 
-        ResultSet resultSet = databaseMetaData.getTables(null, null, "USERS", new String[]{"TABLE"});
+        List<Row> rows =
+                valueAnalysis.analyze(user);
 
-        System.out.println(resultSet.next());
+        String insertSql =
+                sqlGenerator.insert(table, rows);
 
-        User user = new User(0, "Carvel", "carveltest1@gmail.com", new Address("alguma rua", 67, "alguma cidade"), "temporary");
+        sqlExecutor.execute(
+                connection,
+                insertSql
+        );
 
-        ValueAnalysis valueAnalysis = new ValueAnalysis();
-        List<Row> rows = valueAnalysis.analyze(user);
+        List<List<Row>> result =
+                sqlExecutor.query(
+                        connection,
+                        "SELECT * FROM users"
+                );
 
-        for (Row row : rows) {
-            System.out.println(row.getColumnName() + " + " + row.getValue());
-        }
+        ObjectMapper objectMapper =
+                new ObjectMapper();
 
-        String sqlInsert = sqlGenerator.insert(table, rows);
+        User loadedUser =
+                (User) objectMapper.map(
+                        result.get(0),
+                        User.class
+                );
 
-        System.out.println(sqlInsert);
+        System.out.println("ID: " + loadedUser.getId());
+        System.out.println("Name: " + loadedUser.getName());
+        System.out.println("Email: " + loadedUser.getEmail());
+
+        connection.close();
     }
 }

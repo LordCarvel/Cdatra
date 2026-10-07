@@ -13,11 +13,33 @@ public class User {
     private Address address;
     protected String temporary;
 
+    public User () {}
+
     public User (int id, String name, String email, Address address, String temporary) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.address = address;
         this.temporary = temporary;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public String getTemporary() {
+        return temporary;
     }
 }
