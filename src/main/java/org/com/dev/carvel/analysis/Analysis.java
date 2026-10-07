@@ -1,6 +1,7 @@
 package org.com.dev.carvel.analysis;
 
 import org.com.dev.carvel.annotations.Column;
+import org.com.dev.carvel.annotations.Entity;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 
 import java.lang.reflect.Field;
@@ -35,5 +36,24 @@ public class Analysis {
         }
 
         return columns;
+    }
+
+    public String analizeTableName (Class<?> value) {
+
+        if (value == null) {
+            throw new IllegalArgumentException(
+                    "Analyzed class cannot be null"
+            );
+        }
+
+        if (!value.isAnnotationPresent(Entity.class)) {
+            throw new IllegalArgumentException(
+                    "Class is not annotated with @Entity"
+            );
+        }
+
+        Entity entity = value.getAnnotation(Entity.class);
+
+        return entity.tableNaame();
     }
 }

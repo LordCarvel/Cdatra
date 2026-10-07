@@ -17,10 +17,10 @@ public class Main {
 
     public static void main(String[] args) {
 
-        TypeMapper typeMapper = new TypeMapper();
+        Analysis analysis = new Analysis();
 
         System.out.println(
-                typeMapper.map(null)
+                analysis.analizeTableName(null)
         );
     }
 }
