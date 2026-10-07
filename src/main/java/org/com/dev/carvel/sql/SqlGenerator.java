@@ -13,7 +13,19 @@ public class SqlGenerator {
 
     public String createTable(Table table) {
 
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Create table cannot be null"
+            );
+        }
+
         String tableName = table.getName();
+
+        if (tableName == null || tableName.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Table name cannot be null or blank"
+            );
+        }
 
         StringBuilder sql = new StringBuilder();
 

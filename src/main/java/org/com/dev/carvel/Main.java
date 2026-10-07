@@ -20,25 +20,16 @@ public class Main {
         List<ColumnDefinition> columns =
                 analysis.analize(User.class);
 
-        SchemaBuilder schemaBuilder =
-                new SchemaBuilder();
-
-        Table table =
-                schemaBuilder.build(
-                        "users",
-                        columns
-                );
+        SchemaBuilder schemaBuilder = new SchemaBuilder();
 
         List<Row> rows = new ArrayList<>();
 
         rows.add(new Row("name", "Carvel"));
 
 
-        SqlGenerator sqlGenerator =
-                new SqlGenerator();
+        SqlGenerator sqlGenerator =  new SqlGenerator();
 
-        String sqlInsert = sqlGenerator.insert(null, rows);
-
-        System.out.println(sqlInsert);
+        Table table = new Table(null, columns);
+        System.out.println(sqlGenerator.createTable(table));
     }
 }
