@@ -29,38 +29,16 @@ public class Main {
                         columns
                 );
 
-        List<Row> rows =
-                new ArrayList<>();
+        List<Row> rows = new ArrayList<>();
 
-        rows.add(
-                new Row(
-                        "user_email",
-                        "carvel@gmail.com"
-                )
-        );
-
-        rows.add(
-                new Row(
-                        "id",
-                        0
-                )
-        );
-
-        rows.add(
-                new Row(
-                        "name",
-                        "Carvel"
-                )
-        );
+        rows.add(new Row("user_email", "carvel@gmail.com"));
+        rows.add(new Row("id", 0));
+        rows.add(new Row("unknown_column", "teste"));
 
         SqlGenerator sqlGenerator =
                 new SqlGenerator();
 
-        String sqlInsert =
-                sqlGenerator.insert(
-                        table,
-                        rows
-                );
+        String sqlInsert = sqlGenerator.insert(table, rows);
 
         System.out.println(sqlInsert);
     }

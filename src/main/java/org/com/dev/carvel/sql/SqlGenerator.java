@@ -53,6 +53,24 @@ public class SqlGenerator {
         sql.append(table.getName());
         sql.append(" (");
 
+        for (Row row : rows) {
+
+            boolean found = false;
+
+            for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+                if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                throw new IllegalArgumentException(
+                        "Column not found in table: " + row.getColumnName()
+                );
+            }
+        }
+
         for (int i = 0; i < rows.size(); ) {
 
             sql.append(rows.get(i).getColumnName());
