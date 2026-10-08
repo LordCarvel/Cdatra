@@ -34,9 +34,7 @@ public class Repository<T> {
 
     public void createTable () throws SQLException {
 
-        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-        String tableName = analysis.analyzeTableName(type);
-        Table table = schemaBuilder.build(tableName, columnDefinitions);
+        Table table = buildTable();
 
         String sql = sqlGenerator.createTable(table);
 
@@ -47,9 +45,7 @@ public class Repository<T> {
 
         List<Row> rows = valueAnalysis.analyze(entity);
 
-        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-        String tableName = analysis.analyzeTableName(type);
-        Table table = schemaBuilder.build(tableName, columnDefinitions);
+        Table table = buildTable();
 
         String sql = sqlGenerator.insert(table, rows);
 
@@ -58,11 +54,7 @@ public class Repository<T> {
 
     public List<T> findAll () throws Exception {
 
-        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-
-        String tableName = analysis.analyzeTableName(type);
-
-        Table table = schemaBuilder.build(tableName, columnDefinitions);
+        Table table = buildTable();
 
         String sql = sqlGenerator.selectAll(table);
 
@@ -86,9 +78,8 @@ public class Repository<T> {
         Row idRow = valueAnalysis.analyzeId(entity);
         rows.removeIf(row -> row.getColumnName().equalsIgnoreCase(idRow.getColumnName()));
 
-        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-        String tableName = analysis.analyzeTableName(type);
-        Table table = schemaBuilder.build(tableName, columnDefinitions);
+
+        Table table = buildTable();
 
         String sql = sqlGenerator.update(table, rows, idRow);
 
@@ -98,12 +89,18 @@ public class Repository<T> {
     public void delete (T entity) throws IllegalAccessException, SQLException {
         Row idRow = valueAnalysis.analyzeId(entity);
 
-        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-        String tableName = analysis.analyzeTableName(type);
-        Table table = schemaBuilder.build(tableName, columnDefinitions);
+        Table table = buildTable();
 
         String sql = sqlGenerator.delete(table, idRow);
 
         sqlExecutor.execute(connection, sql);
+    }
+
+    private Table buildTable () {
+
+        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
+        String tableName = analysis.analyzeTableName(type);
+
+        return schemaBuilder.build(tableName, columnDefinitions);
     }
 }
