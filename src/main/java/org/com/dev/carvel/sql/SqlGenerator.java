@@ -1,8 +1,10 @@
 package org.com.dev.carvel.sql;
 
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
+import org.com.dev.carvel.query.LogicalOperator;
 import org.com.dev.carvel.query.Operator;
 import org.com.dev.carvel.query.QueryCondition;
+import org.com.dev.carvel.query.QueryFilter;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.table.Table;
 
@@ -658,6 +660,80 @@ public class SqlGenerator {
 
                 sql.append(" AND ");
             }
+
+            i = i + 1;
+        }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
+
+    public String selectByFilters (Table table, List<QueryFilter> filters) {
+
+        if (table == null) {
+
+            throw new IllegalArgumentException("Select table cannot be null");
+        }
+
+        if (filters == null) {
+
+            throw new IllegalArgumentException("Select filters cannot be null");
+        }
+
+        if (filters.isEmpty()) {
+
+            throw new IllegalArgumentException("Select requires at least one filter");
+        }
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("SELECT * FROM ");
+        sql.append(table.getName());
+        sql.append(" WHERE ");
+
+        for (int i = 0; i < filters.size(); ) {
+
+            QueryFilter filter = filters.get(i);
+
+            if (filter == null) {
+
+                throw new IllegalArgumentException("Query filter cannot be null");
+            }
+
+            QueryCondition condition = filter.getCondition();
+
+            if (condition == null) {
+
+                throw new IllegalArgumentException("Query condition cannot be null");
+            }
+
+            if (i > 0) {
+
+                LogicalOperator logicalOperator = filter.getLogicalOperator();
+
+                if (logicalOperator == null) {
+
+                    throw new IllegalArgumentException("Logical operator cannot be null after the first condition");
+                }
+
+                if (logicalOperator == LogicalOperator.AND) {
+
+                    sql.append(" AND ");
+                } else if (logicalOperator == LogicalOperator.OR) {
+
+                    sql.append(" OR ");
+                }
+            }
+
+            Row row = new Row(condition.getColumnName(), condition.getValue());
+
+            String conditionSql = selectBy(table, row, condition.getOperator());
+
+            conditionSql = conditionSql.replace("SELECT * FROM " + table.getName() + " WHERE ", "");
+            conditionSql = conditionSql.replace(";", "");
+
+            sql.append(conditionSql);
 
             i = i + 1;
         }
