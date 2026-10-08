@@ -1,41 +1,62 @@
 package org.com.dev.carvel;
 
-import org.com.dev.carvel.analysis.Analysis;
-import org.com.dev.carvel.columnDefinition.ColumnDefinition;
-import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
-import org.com.dev.carvel.sql.SqlGenerator;
-import org.com.dev.carvel.table.Table;
+import org.com.dev.carvel.repository.Repository;
 import org.com.dev.carvel.user.User;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
-        Analysis analysis = new Analysis();
-
-        List<ColumnDefinition> columns =
-                analysis.analize(User.class);
-
-        String tableName =
-                analysis.analyzeTableName(User.class);
-
-        SchemaBuilder schemaBuilder =
-                new SchemaBuilder();
-
-        Table table =
-                schemaBuilder.build(
-                        tableName,
-                        columns
+        Connection connection =
+                DriverManager.getConnection(
+                        "jdbc:h2:mem:testdb"
                 );
 
-        SqlGenerator sqlGenerator =
-                new SqlGenerator();
+        Repository<User> repository =
+                new Repository<>(
+                        User.class,
+                        connection
+                );
 
-        String createTableSql =
-                sqlGenerator.createTable(table);
+        repository.createTable();
 
-        System.out.println(createTableSql);
+        User user1 =
+                new User(
+                        0,
+                        "Carvel",
+                        "carvel@gmail.com",
+                        null,
+                        null
+                );
+
+        User user2 =
+                new User(
+                        0,
+                        "Joao",
+                        "joao@gmail.com",
+                        null,
+                        null
+                );
+
+        repository.save(user1);
+        repository.save(user2);
+
+        List<User> users =
+                repository.findAll();
+
+        for (User user : users) {
+
+            System.out.println(
+                    "ID: " + user.getId()
+                            + " | Name: " + user.getName()
+                            + " | Email: " + user.getEmail()
+            );
+        }
+
+        connection.close();
     }
 }
