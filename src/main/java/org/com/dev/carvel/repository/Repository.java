@@ -98,6 +98,27 @@ public class Repository<T> {
         return (T) objectMapper.map(result.get(0), type);
     }
 
+    public List<T> findBy (String columnName, Object value) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
+        Table table = buildTable();
+
+        Row row = new Row(columnName, value);
+
+        String sql = sqlGenerator.selectBy(table, row);
+
+        List<List<Row>> result = sqlExecutor.query(connection, sql);
+
+        List<T> entities = new ArrayList<>();
+
+        for (List<Row> record : result) {
+
+            T entity = (T) objectMapper.map(record, type);
+
+            entities.add(entity);
+        }
+
+        return  entities;
+    }
     public void update (T entity) throws IllegalAccessException, SQLException {
 
         List<Row> rows = valueAnalysis.analyze(entity);

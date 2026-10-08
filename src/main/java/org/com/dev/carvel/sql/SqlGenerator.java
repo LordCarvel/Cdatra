@@ -554,4 +554,79 @@ public class SqlGenerator {
 
         return sql.toString();
     }
+
+    public String selectBy (Table table, Row row) {
+
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Select table cannot be null"
+            );
+        }
+
+        if (row == null) {
+            throw new IllegalArgumentException(
+                    "Select row cannot be null"
+            );
+        }
+
+        if (row.getColumnName() == null
+                || row.getColumnName().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Select column name cannot be null or blank"
+            );
+        }
+
+        boolean columnFound = false;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                columnFound = true;
+            }
+        }
+
+        if (!columnFound) {
+
+            throw new IllegalArgumentException(
+                    "Column not found in table: "
+                            + row.getColumnName()
+            );
+        }
+
+            StringBuilder sql = new StringBuilder();
+
+            sql.append("SELECT * FROM ");
+            sql.append(table.getName());
+            sql.append(" WHERE ");
+            sql.append(row.getColumnName());
+            sql.append(" = ");
+
+            Object value = row.getValue();
+
+            if (value == null) {
+
+                sql.append("NULL");
+            } else {
+
+                SqlType sqlType =typeMapper.map(value.getClass());
+
+                if (sqlType == SqlType.VARCHAR) {
+
+                    String stringValue = value.toString().replace("'", "'");
+
+                    sql.append("'");
+                    sql.append(stringValue);
+                    sql.append("'");
+                } else {
+
+                    sql.append(value);
+                }
+            }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
 }
