@@ -5,6 +5,7 @@ import org.com.dev.carvel.analysis.Analysis;
 import org.com.dev.carvel.analysis.ValueAnalysis;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.mapper.ObjectMapper;
+import org.com.dev.carvel.repository.Repository;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
 import org.com.dev.carvel.sql.SqlExecutor;
@@ -20,29 +21,6 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Analysis analysis = new Analysis();
-
-        List<ColumnDefinition> columns =
-                analysis.analize(User.class);
-
-        String tableName =
-                analysis.analyzeTableName(User.class);
-
-        SchemaBuilder schemaBuilder =
-                new SchemaBuilder();
-
-        Table table =
-                schemaBuilder.build(
-                        tableName,
-                        columns
-                );
-
-        SqlGenerator sqlGenerator =
-                new SqlGenerator();
-
-        String createTableSql =
-                sqlGenerator.createTable(table);
-
         DatabaseConnection databaseConnection =
                 new DatabaseConnection();
 
@@ -52,14 +30,6 @@ public class Main {
                         "sa",
                         ""
                 );
-
-        SqlExecutor sqlExecutor =
-                new SqlExecutor();
-
-        sqlExecutor.execute(
-                connection,
-                createTableSql
-        );
 
         User user1 =
                 new User(
@@ -87,96 +57,26 @@ public class Main {
                         "temporary2"
                 );
 
-        ValueAnalysis valueAnalysis =
-                new ValueAnalysis();
+        Repository<User> repository =
+                new Repository<>(User.class, connection);
 
-        List<Row> user1Rows =
-                valueAnalysis.analyze(user1);
+        repository.createTable();
 
-        List<Row> user2Rows =
-                valueAnalysis.analyze(user2);
+        repository.save(user1);
+        repository.save(user2);
 
-        sqlExecutor.execute(
-                connection,
-                sqlGenerator.insert(
-                        table,
-                        user1Rows
-                )
-        );
+        List<User> users =
+                repository.findAll();
 
-        sqlExecutor.execute(
-                connection,
-                sqlGenerator.insert(
-                        table,
-                        user2Rows
-                )
-        );
-
-        List<Row> updateRows =
-                new ArrayList<>();
-
-        updateRows.add(
-                new Row(
-                        "name",
-                        "Carvel Novo"
-                )
-        );
-
-        updateRows.add(
-                new Row(
-                        "user_email",
-                        "novo@gmail.com"
-                )
-        );
-
-        Row idRow =
-                new Row(
-                        "id",
-                        1
-                );
-
-        String deleteSql =
-                sqlGenerator.delete(
-                        table,
-                        idRow
-                );
-
-        System.out.println(deleteSql);
-
-        sqlExecutor.execute(
-                connection,
-                deleteSql
-        );
-
-        String selectSql =
-                sqlGenerator.selectAll(table);
-
-        List<List<Row>> result =
-                sqlExecutor.query(
-                        connection,
-                        selectSql
-                );
-
-        ObjectMapper objectMapper =
-                new ObjectMapper();
-
-        for (List<Row> record : result) {
-
-            User loadedUser =
-                    (User) objectMapper.map(
-                            record,
-                            User.class
-                    );
+        for (User user : users) {
 
             System.out.println(
-                    loadedUser.getId()
+                    user.getId()
                             + " | "
-                            + loadedUser.getName()
+                            + user.getName()
                             + " | "
-                            + loadedUser.getEmail()
+                            + user.getEmail()
             );
         }
-
-        connection.close();
     }
 }
