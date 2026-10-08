@@ -515,108 +515,14 @@ public class SqlGenerator {
 
     public String selectBy (Table table, Row row, Operator operator) {
 
-        if (table == null) {
-
-            throw new IllegalArgumentException("Select table cannot be null");
-        }
-
-        if (row == null) {
-
-            throw new IllegalArgumentException("Select row cannot be null");
-        }
-
-        if (row.getColumnName() == null || row.getColumnName().isBlank()) {
-
-            throw new IllegalArgumentException("Select column name cannot be null or blank");
-        }
-
-        if (operator == null) {
-
-            throw new IllegalArgumentException("Select operator cannot be null");
-        }
-
-        String sqlOperator;
-
-        if (operator == Operator.EQUAL) {
-
-            sqlOperator = "=";
-        } else if (operator == Operator.NOT_EQUAL) {
-
-            sqlOperator = "!=";
-        } else if (operator == Operator.GREATER_THAN) {
-
-            sqlOperator = ">";
-        } else if (operator == Operator.LESS_THAN) {
-
-            sqlOperator = "<";
-        } else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
-
-            sqlOperator = ">=";
-        } else if (operator == Operator.LESS_THAN_OR_EQUAL) {
-
-            sqlOperator = "<=";
-        } else {
-
-            throw new IllegalArgumentException("Unsupported operator: " + operator);
-        }
-
-        boolean columnFound = false;
-
-        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
-
-            if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
-
-                columnFound = true;
-            }
-        }
-
-        if (!columnFound) {
-
-            throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
-        }
+        String condition = buildCondition(table, row, operator);
 
         StringBuilder sql = new StringBuilder();
 
         sql.append("SELECT * FROM ");
         sql.append(table.getName());
         sql.append(" WHERE ");
-        sql.append(row.getColumnName());
-
-        Object value = row.getValue();
-
-        if (value == null) {
-
-            if (operator == Operator.EQUAL) {
-
-                sql.append(" IS NULL");
-            } else if (operator == Operator.NOT_EQUAL) {
-
-                sql.append(" IS NOT NULL");
-            } else {
-
-                throw new IllegalArgumentException("Null values only support EQUAL or NOT_EQUAL");
-            }
-        } else {
-
-            sql.append(" ");
-            sql.append(sqlOperator);
-            sql.append(" ");
-
-            SqlType sqlType = typeMapper.map(value.getClass());
-
-            if (sqlType == SqlType.VARCHAR) {
-
-                String stringValue = value.toString().replace("'", "''");
-
-                sql.append("'");
-                sql.append(stringValue);
-                sql.append("'");
-            } else {
-
-                sql.append(value);
-            }
-        }
-
+        sql.append(condition);
         sql.append(";");
 
         return sql.toString();
@@ -648,11 +554,14 @@ public class SqlGenerator {
         for (int i = 0; i < conditions.size();) {
 
             QueryCondition condition = conditions.get(i);
-            Row row = new Row(condition.getColumnName(), condition.getValue());
-            String conditionSql = selectBy(table, row, condition.getOperator());
 
-            conditionSql = conditionSql.replace("SELECT * FROM " + table.getName() + " WHERE ", "");
-            conditionSql = conditionSql.replace(";", "");
+            if (condition == null) {
+
+                throw new IllegalArgumentException("Query condition cannot be null");
+            }
+
+            Row row = new Row(condition.getColumnName(), condition.getValue());
+            String conditionSql = buildCondition(table, row, condition.getOperator());
 
             sql.append(conditionSql);
 
@@ -692,7 +601,7 @@ public class SqlGenerator {
         sql.append(table.getName());
         sql.append(" WHERE ");
 
-        for (int i = 0; i < filters.size(); ) {
+        for (int i = 0; i < filters.size();) {
 
             QueryFilter filter = filters.get(i);
 
@@ -727,11 +636,7 @@ public class SqlGenerator {
             }
 
             Row row = new Row(condition.getColumnName(), condition.getValue());
-
-            String conditionSql = selectBy(table, row, condition.getOperator());
-
-            conditionSql = conditionSql.replace("SELECT * FROM " + table.getName() + " WHERE ", "");
-            conditionSql = conditionSql.replace(";", "");
+            String conditionSql = buildCondition(table, row, condition.getOperator());
 
             sql.append(conditionSql);
 
@@ -741,5 +646,117 @@ public class SqlGenerator {
         sql.append(";");
 
         return sql.toString();
+    }
+
+    private String buildCondition (Table table, Row row, Operator operator) {
+
+        if (table == null) {
+
+            throw new IllegalArgumentException("Select table cannot be null");
+        }
+
+        if (row == null) {
+
+            throw new IllegalArgumentException("Select row cannot be null");
+        }
+
+        if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+
+            throw new IllegalArgumentException("Select column name cannot be null or blank");
+        }
+
+        if (operator == null) {
+
+            throw new IllegalArgumentException("Select operator cannot be null");
+        }
+
+        boolean columnFound = false;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                columnFound = true;
+            }
+        }
+
+        if (!columnFound) {
+
+            throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
+        }
+
+        String sqlOperator;
+
+        if (operator == Operator.EQUAL) {
+
+            sqlOperator = "=";
+
+        } else if (operator == Operator.NOT_EQUAL) {
+
+            sqlOperator = "!=";
+
+        } else if (operator == Operator.GREATER_THAN) {
+
+            sqlOperator = ">";
+
+        } else if (operator == Operator.LESS_THAN) {
+
+            sqlOperator = "<";
+
+        } else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
+
+            sqlOperator = ">=";
+
+        } else if (operator == Operator.LESS_THAN_OR_EQUAL) {
+
+            sqlOperator = "<=";
+
+        } else {
+
+            throw new IllegalArgumentException("Unsupported operator: " + operator);
+        }
+
+        StringBuilder condition = new StringBuilder();
+
+        condition.append(row.getColumnName());
+
+        Object value = row.getValue();
+
+        if (value == null) {
+
+            if (operator == Operator.EQUAL) {
+
+                condition.append(" IS NULL");
+
+            } else if (operator == Operator.NOT_EQUAL) {
+
+                condition.append(" IS NOT NULL");
+
+            } else {
+
+                throw new IllegalArgumentException("Null values only support EQUAL or NOT_EQUAL");
+            }
+        } else {
+
+            condition.append(" ");
+            condition.append(sqlOperator);
+            condition.append(" ");
+
+            SqlType sqlType = typeMapper.map(value.getClass());
+
+            if (sqlType == SqlType.VARCHAR) {
+
+                String stringValue = value.toString().replace("'", "''");
+
+                condition.append("'");
+                condition.append(stringValue);
+                condition.append("'");
+            } else {
+
+                condition.append(value);
+            }
+        }
+
+        return condition.toString();
     }
 }
