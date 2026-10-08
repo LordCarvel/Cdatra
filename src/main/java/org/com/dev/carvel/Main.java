@@ -135,18 +135,17 @@ public class Main {
                         1
                 );
 
-        String updateSql =
-                sqlGenerator.update(
+        String deleteSql =
+                sqlGenerator.delete(
                         table,
-                        updateRows,
                         idRow
                 );
 
-        System.out.println(updateSql);
+        System.out.println(deleteSql);
 
         sqlExecutor.execute(
                 connection,
-                updateSql
+                deleteSql
         );
 
         String selectSql =

@@ -406,4 +406,53 @@ public class SqlGenerator {
 
         return sql.toString();
     }
+
+    public String delete (Table table, Row idRow) {
+
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Delete table cannot be null"
+            );
+        }
+
+        if (idRow == null) {
+            throw new IllegalArgumentException(
+                    "Delete ID row cannot be null"
+            );
+        }
+
+        if (idRow.getValue() == null) {
+            throw new IllegalArgumentException(
+                    "Delete ID value cannot be null"
+            );
+        }
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("DELETE FROM ");
+        sql.append(table.getName());
+        sql.append(" WHERE ");
+        sql.append(idRow.getColumnName());
+        sql.append(" = ");
+
+        Object idValue = idRow.getValue();
+
+        SqlType idType = typeMapper.map(idValue.getClass());
+
+        if (idType == SqlType.VARCHAR) {
+
+            String stringValue = idValue.toString().replace("'", "'");
+
+            sql.append("'");
+            sql.append(stringValue);
+            sql.append("'");
+        } else {
+
+            sql.append(idValue);
+        }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
 }
