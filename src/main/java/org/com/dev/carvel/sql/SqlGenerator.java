@@ -2,6 +2,7 @@ package org.com.dev.carvel.sql;
 
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.query.Operator;
+import org.com.dev.carvel.query.QueryCondition;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.table.Table;
 
@@ -12,7 +13,7 @@ public class SqlGenerator {
 
     private final TypeMapper typeMapper = new TypeMapper();
 
-    public String createTable(Table table) {
+    public String createTable (Table table) {
 
         validateTable(table);
 
@@ -27,7 +28,6 @@ public class SqlGenerator {
         for (int i = 0; i < columns.size(); i++) {
 
             ColumnDefinition column = columns.get(i);
-
             String columnSql = column.getName() + " " + typeMapper.map(column.getType());
 
             if (column.isGeneratedValue()) {
@@ -53,38 +53,30 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    private void validateTable(Table table) {
+    private void validateTable (Table table) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Table cannot be null"
-            );
+            throw new IllegalArgumentException("Table cannot be null");
         }
 
         String tableName = table.getName();
 
         if (tableName == null || tableName.isBlank()) {
 
-            throw new IllegalArgumentException(
-                    "Table name cannot be null or blank"
-            );
+            throw new IllegalArgumentException("Table name cannot be null or blank");
         }
 
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
         if (columns == null) {
 
-            throw new IllegalArgumentException(
-                    "Table columns cannot be null"
-            );
+            throw new IllegalArgumentException("Table columns cannot be null");
         }
 
         if (columns.isEmpty()) {
 
-            throw new IllegalArgumentException(
-                    "Table requires at least one column"
-            );
+            throw new IllegalArgumentException("Table requires at least one column");
         }
 
         List<String> seenColumns = new ArrayList<>();
@@ -93,18 +85,14 @@ public class SqlGenerator {
 
             if (columnDefinition == null) {
 
-                throw new IllegalArgumentException(
-                        "Table column cannot be null"
-                );
+                throw new IllegalArgumentException("Table column cannot be null");
             }
 
             String columnName = columnDefinition.getName();
 
             if (columnName == null || columnName.isBlank()) {
 
-                throw new IllegalArgumentException(
-                        "Column name cannot be null or blank"
-                );
+                throw new IllegalArgumentException("Column name cannot be null or blank");
             }
 
             boolean duplicated = false;
@@ -119,9 +107,7 @@ public class SqlGenerator {
 
             if (duplicated) {
 
-                throw new IllegalArgumentException(
-                        "Duplicate column in table: " + columnName
-                );
+                throw new IllegalArgumentException("Duplicate column in table: " + columnName);
             }
 
             seenColumns.add(columnName);
@@ -130,52 +116,40 @@ public class SqlGenerator {
 
             if (javaType == null) {
 
-                throw new IllegalArgumentException(
-                        "Column type cannot be null"
-                );
+                throw new IllegalArgumentException("Column type cannot be null");
             }
 
             typeMapper.map(javaType);
         }
     }
 
-    public String insert(Table table, List<Row> rows) {
+    public String insert (Table table, List<Row> rows) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Insert table cannot be null"
-            );
+            throw new IllegalArgumentException("Insert table cannot be null");
         }
 
         if (rows == null) {
 
-            throw new IllegalArgumentException(
-                    "Insert rows cannot be null"
-            );
+            throw new IllegalArgumentException("Insert rows cannot be null");
         }
 
         if (rows.isEmpty()) {
 
-            throw new IllegalArgumentException(
-                    "Insert requires at least one row"
-            );
+            throw new IllegalArgumentException("Insert requires at least one row");
         }
 
         for (Row row : rows) {
 
             if (row == null) {
 
-                throw new IllegalArgumentException(
-                        "Insert row cannot be null"
-                );
+                throw new IllegalArgumentException("Insert row cannot be null");
             }
 
             if (row.getColumnName() == null || row.getColumnName().isBlank()) {
 
-                throw new IllegalArgumentException(
-                        "Column name cannot be null or blank"
-                );
+                throw new IllegalArgumentException("Column name cannot be null or blank");
             }
         }
 
@@ -203,9 +177,7 @@ public class SqlGenerator {
 
             if (duplicated) {
 
-                throw new IllegalArgumentException(
-                        "Duplicate column in insert: " + row.getColumnName()
-                );
+                throw new IllegalArgumentException("Duplicate column in insert: " + row.getColumnName());
             }
 
             seenColumns.add(row.getColumnName());
@@ -228,9 +200,7 @@ public class SqlGenerator {
 
                         if (expectedType != receivedType) {
 
-                            throw new IllegalArgumentException(
-                                    "Invalid value type for column: " + row.getColumnName()
-                            );
+                            throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
                         }
                     }
                 }
@@ -238,13 +208,11 @@ public class SqlGenerator {
 
             if (!found) {
 
-                throw new IllegalArgumentException(
-                        "Column not found in table: " + row.getColumnName()
-                );
+                throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
             }
         }
 
-        for (int i = 0; i < rows.size(); ) {
+        for (int i = 0; i < rows.size();) {
 
             sql.append(rows.get(i).getColumnName());
 
@@ -262,14 +230,13 @@ public class SqlGenerator {
 
         sqlValue.append(" VALUES (");
 
-        for (int i = 0; i < rows.size(); ) {
+        for (int i = 0; i < rows.size();) {
 
             Object value = rows.get(i).getValue();
 
             if (value == null) {
 
                 sqlValue.append("NULL");
-
             } else {
 
                 SqlType sqlType = typeMapper.map(value.getClass());
@@ -277,13 +244,11 @@ public class SqlGenerator {
                 if (sqlType == SqlType.VARCHAR) {
 
                     String stringValue = value.toString();
-
                     stringValue = stringValue.replace("'", "''");
 
                     sqlValue.append("'");
                     sqlValue.append(stringValue);
                     sqlValue.append("'");
-
                 } else {
 
                     sqlValue.append(value);
@@ -304,53 +269,41 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String selectAll(Table table) {
+    public String selectAll (Table table) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Select table cannot be null"
-            );
+            throw new IllegalArgumentException("Select table cannot be null");
         }
 
         if (table.getName() == null || table.getName().isBlank()) {
 
-            throw new IllegalArgumentException(
-                    "Table name cannot be null or blank"
-            );
+            throw new IllegalArgumentException("Table name cannot be null or blank");
         }
 
         return "SELECT * FROM " + table.getName() + ";";
     }
 
-    public String selectById(Table table, Row idRow) {
+    public String selectById (Table table, Row idRow) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Select table cannot be null"
-            );
+            throw new IllegalArgumentException("Select table cannot be null");
         }
 
         if (idRow == null) {
 
-            throw new IllegalArgumentException(
-                    "Select ID row cannot be null"
-            );
+            throw new IllegalArgumentException("Select ID row cannot be null");
         }
 
         if (idRow.getColumnName() == null || idRow.getColumnName().isBlank()) {
 
-            throw new IllegalArgumentException(
-                    "Select ID column name cannot be null or blank"
-            );
+            throw new IllegalArgumentException("Select ID column name cannot be null or blank");
         }
 
         if (idRow.getValue() == null) {
 
-            throw new IllegalArgumentException(
-                    "Select ID value cannot be null"
-            );
+            throw new IllegalArgumentException("Select ID value cannot be null");
         }
 
         boolean idFound = false;
@@ -365,9 +318,7 @@ public class SqlGenerator {
 
         if (!idFound) {
 
-            throw new IllegalArgumentException(
-                    "ID column not found in table: " + idRow.getColumnName()
-            );
+            throw new IllegalArgumentException("ID column not found in table: " + idRow.getColumnName());
         }
 
         StringBuilder sql = new StringBuilder();
@@ -379,7 +330,6 @@ public class SqlGenerator {
         sql.append(" = ");
 
         Object idValue = idRow.getValue();
-
         SqlType idType = typeMapper.map(idValue.getClass());
 
         if (idType == SqlType.VARCHAR) {
@@ -389,7 +339,6 @@ public class SqlGenerator {
             sql.append("'");
             sql.append(stringValue);
             sql.append("'");
-
         } else {
 
             sql.append(idValue);
@@ -400,41 +349,31 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String update(Table table, List<Row> rows, Row idRow) {
+    public String update (Table table, List<Row> rows, Row idRow) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Update table cannot be null"
-            );
+            throw new IllegalArgumentException("Update table cannot be null");
         }
 
         if (rows == null) {
 
-            throw new IllegalArgumentException(
-                    "Update rows cannot be null"
-            );
+            throw new IllegalArgumentException("Update rows cannot be null");
         }
 
         if (rows.isEmpty()) {
 
-            throw new IllegalArgumentException(
-                    "Update requires at least one row"
-            );
+            throw new IllegalArgumentException("Update requires at least one row");
         }
 
         if (idRow == null) {
 
-            throw new IllegalArgumentException(
-                    "Update ID row cannot be null"
-            );
+            throw new IllegalArgumentException("Update ID row cannot be null");
         }
 
         if (idRow.getColumnName() == null || idRow.getColumnName().isBlank()) {
 
-            throw new IllegalArgumentException(
-                    "Update ID column name cannot be null or blank"
-            );
+            throw new IllegalArgumentException("Update ID column name cannot be null or blank");
         }
 
         boolean idFound = false;
@@ -449,18 +388,14 @@ public class SqlGenerator {
 
         if (!idFound) {
 
-            throw new IllegalArgumentException(
-                    "ID column not found in table: " + idRow.getColumnName()
-            );
+            throw new IllegalArgumentException("ID column not found in table: " + idRow.getColumnName());
         }
 
         for (Row row : rows) {
 
             if (row.getColumnName().equalsIgnoreCase(idRow.getColumnName())) {
 
-                throw new IllegalArgumentException(
-                        "ID column cannot be updated: " + row.getColumnName()
-                );
+                throw new IllegalArgumentException("ID column cannot be updated: " + row.getColumnName());
             }
         }
 
@@ -470,7 +405,7 @@ public class SqlGenerator {
         sql.append(table.getName());
         sql.append(" SET ");
 
-        for (int i = 0; i < rows.size(); ) {
+        for (int i = 0; i < rows.size();) {
 
             Row row = rows.get(i);
 
@@ -482,7 +417,6 @@ public class SqlGenerator {
             if (value == null) {
 
                 sql.append("NULL");
-
             } else {
 
                 SqlType sqlType = typeMapper.map(value.getClass());
@@ -494,7 +428,6 @@ public class SqlGenerator {
                     sql.append("'");
                     sql.append(stringValue);
                     sql.append("'");
-
                 } else {
 
                     sql.append(value);
@@ -502,6 +435,7 @@ public class SqlGenerator {
             }
 
             if (i < rows.size() - 1) {
+
                 sql.append(", ");
             }
 
@@ -513,7 +447,6 @@ public class SqlGenerator {
         sql.append(" = ");
 
         Object idValue = idRow.getValue();
-
         SqlType idType = typeMapper.map(idValue.getClass());
 
         if (idType == SqlType.VARCHAR) {
@@ -523,7 +456,6 @@ public class SqlGenerator {
             sql.append("'");
             sql.append(stringValue);
             sql.append("'");
-
         } else {
 
             sql.append(idValue);
@@ -534,27 +466,21 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String delete(Table table, Row idRow) {
+    public String delete (Table table, Row idRow) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Delete table cannot be null"
-            );
+            throw new IllegalArgumentException("Delete table cannot be null");
         }
 
         if (idRow == null) {
 
-            throw new IllegalArgumentException(
-                    "Delete ID row cannot be null"
-            );
+            throw new IllegalArgumentException("Delete ID row cannot be null");
         }
 
         if (idRow.getValue() == null) {
 
-            throw new IllegalArgumentException(
-                    "Delete ID value cannot be null"
-            );
+            throw new IllegalArgumentException("Delete ID value cannot be null");
         }
 
         StringBuilder sql = new StringBuilder();
@@ -566,7 +492,6 @@ public class SqlGenerator {
         sql.append(" = ");
 
         Object idValue = idRow.getValue();
-
         SqlType idType = typeMapper.map(idValue.getClass());
 
         if (idType == SqlType.VARCHAR) {
@@ -576,7 +501,6 @@ public class SqlGenerator {
             sql.append("'");
             sql.append(stringValue);
             sql.append("'");
-
         } else {
 
             sql.append(idValue);
@@ -587,34 +511,26 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String selectBy(Table table, Row row, Operator operator) {
+    public String selectBy (Table table, Row row, Operator operator) {
 
         if (table == null) {
 
-            throw new IllegalArgumentException(
-                    "Select table cannot be null"
-            );
+            throw new IllegalArgumentException("Select table cannot be null");
         }
 
         if (row == null) {
 
-            throw new IllegalArgumentException(
-                    "Select row cannot be null"
-            );
+            throw new IllegalArgumentException("Select row cannot be null");
         }
 
         if (row.getColumnName() == null || row.getColumnName().isBlank()) {
 
-            throw new IllegalArgumentException(
-                    "Select column name cannot be null or blank"
-            );
+            throw new IllegalArgumentException("Select column name cannot be null or blank");
         }
 
         if (operator == null) {
 
-            throw new IllegalArgumentException(
-                    "Select operator cannot be null"
-            );
+            throw new IllegalArgumentException("Select operator cannot be null");
         }
 
         String sqlOperator;
@@ -622,32 +538,24 @@ public class SqlGenerator {
         if (operator == Operator.EQUAL) {
 
             sqlOperator = "=";
-
         } else if (operator == Operator.NOT_EQUAL) {
 
             sqlOperator = "!=";
-
         } else if (operator == Operator.GREATER_THAN) {
 
             sqlOperator = ">";
-
         } else if (operator == Operator.LESS_THAN) {
 
             sqlOperator = "<";
-
         } else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
 
             sqlOperator = ">=";
-
         } else if (operator == Operator.LESS_THAN_OR_EQUAL) {
 
             sqlOperator = "<=";
-
         } else {
 
-            throw new IllegalArgumentException(
-                    "Unsupported operator: " + operator
-            );
+            throw new IllegalArgumentException("Unsupported operator: " + operator);
         }
 
         boolean columnFound = false;
@@ -662,9 +570,7 @@ public class SqlGenerator {
 
         if (!columnFound) {
 
-            throw new IllegalArgumentException(
-                    "Column not found in table: " + row.getColumnName()
-            );
+            throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
         }
 
         StringBuilder sql = new StringBuilder();
@@ -681,18 +587,13 @@ public class SqlGenerator {
             if (operator == Operator.EQUAL) {
 
                 sql.append(" IS NULL");
-
             } else if (operator == Operator.NOT_EQUAL) {
 
                 sql.append(" IS NOT NULL");
-
             } else {
 
-                throw new IllegalArgumentException(
-                        "Null values only support EQUAL or NOT_EQUAL"
-                );
+                throw new IllegalArgumentException("Null values only support EQUAL or NOT_EQUAL");
             }
-
         } else {
 
             sql.append(" ");
@@ -708,11 +609,57 @@ public class SqlGenerator {
                 sql.append("'");
                 sql.append(stringValue);
                 sql.append("'");
-
             } else {
 
                 sql.append(value);
             }
+        }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
+
+    public String selectByConditions (Table table, List<QueryCondition> conditions) {
+
+        if (table == null) {
+
+            throw new IllegalArgumentException("Select table cannot be null");
+        }
+
+        if (conditions == null) {
+
+            throw new IllegalArgumentException("Select conditions cannot be null");
+        }
+
+        if (conditions.isEmpty()) {
+
+            throw new IllegalArgumentException("Select requires at least one condition");
+        }
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("SELECT * FROM ");
+        sql.append(table.getName());
+        sql.append(" WHERE ");
+
+        for (int i = 0; i < conditions.size();) {
+
+            QueryCondition condition = conditions.get(i);
+            Row row = new Row(condition.getColumnName(), condition.getValue());
+            String conditionSql = selectBy(table, row, condition.getOperator());
+
+            conditionSql = conditionSql.replace("SELECT * FROM " + table.getName() + " WHERE ", "");
+            conditionSql = conditionSql.replace(";", "");
+
+            sql.append(conditionSql);
+
+            if (i < conditions.size() - 1) {
+
+                sql.append(" AND ");
+            }
+
+            i = i + 1;
         }
 
         sql.append(";");

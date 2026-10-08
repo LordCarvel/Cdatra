@@ -30,6 +30,7 @@ public class Repository<T> {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Repository (Class<T> type, Connection connection) {
+
         this.type = type;
         this.connection = connection;
     }
@@ -37,7 +38,6 @@ public class Repository<T> {
     public void createTable () throws SQLException {
 
         Table table = buildTable();
-
         String sql = sqlGenerator.createTable(table);
 
         sqlExecutor.execute(connection, sql);
@@ -46,9 +46,7 @@ public class Repository<T> {
     public void save (T entity) throws IllegalAccessException, SQLException {
 
         List<Row> rows = valueAnalysis.analyze(entity);
-
         Table table = buildTable();
-
         String sql = sqlGenerator.insert(table, rows);
 
         Object generatedValue = sqlExecutor.executeAndReturnGeneratedKey(connection, sql);
@@ -62,7 +60,6 @@ public class Repository<T> {
     public List<T> findAll () throws Exception {
 
         Table table = buildTable();
-
         String sql = sqlGenerator.selectAll(table);
 
         List<List<Row>> result = sqlExecutor.query(connection, sql);
@@ -72,7 +69,6 @@ public class Repository<T> {
         for (List<Row> record : result) {
 
             T entity = (T) objectMapper.map(record, type);
-
             entities.add(entity);
         }
 
@@ -82,11 +78,8 @@ public class Repository<T> {
     public T findById (Object idValue) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
-
         String idColumnName = analysis.analyzeIdColumnName(type);
-
         Row idRow = new Row(idColumnName, idValue);
-
         String sql = sqlGenerator.selectById(table, idRow);
 
         List<List<Row>> result = sqlExecutor.query(connection, sql);
@@ -102,9 +95,7 @@ public class Repository<T> {
     public List<T> findBy (String columnName, Object value, Operator operator) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
-
         Row row = new Row(columnName, value);
-
         String sql = sqlGenerator.selectBy(table, row, operator);
 
         List<List<Row>> result = sqlExecutor.query(connection, sql);
@@ -114,31 +105,28 @@ public class Repository<T> {
         for (List<Row> record : result) {
 
             T entity = (T) objectMapper.map(record, type);
-
             entities.add(entity);
         }
 
-        return  entities;
+        return entities;
     }
+
     public void update (T entity) throws IllegalAccessException, SQLException {
 
         List<Row> rows = valueAnalysis.analyze(entity);
         Row idRow = valueAnalysis.analyzeId(entity);
         rows.removeIf(row -> row.getColumnName().equalsIgnoreCase(idRow.getColumnName()));
 
-
         Table table = buildTable();
-
         String sql = sqlGenerator.update(table, rows, idRow);
 
         sqlExecutor.execute(connection, sql);
     }
 
     public void delete (T entity) throws IllegalAccessException, SQLException {
+
         Row idRow = valueAnalysis.analyzeId(entity);
-
         Table table = buildTable();
-
         String sql = sqlGenerator.delete(table, idRow);
 
         sqlExecutor.execute(connection, sql);

@@ -10,42 +10,16 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main (String[] args) throws Exception {
 
-        Connection connection = DriverManager.getConnection(
-                "jdbc:h2:mem:testdb"
-        );
-
-        Repository<User> repository = new Repository<>(
-                User.class,
-                connection
-        );
+        Connection connection = DriverManager.getConnection("jdbc:h2:mem:testdb");
+        Repository<User> repository = new Repository<>(User.class, connection);
 
         repository.createTable();
 
-        User user1 = new User(
-                0,
-                "Carvel",
-                "carvel@gmail.com",
-                null,
-                null
-        );
-
-        User user2 = new User(
-                0,
-                "Joao",
-                "joao@gmail.com",
-                null,
-                null
-        );
-
-        User user3 = new User(
-                0,
-                "Carvel",
-                "carvel2@gmail.com",
-                null,
-                null
-        );
+        User user1 = new User(0, "Carvel", "carvel@gmail.com", null, null);
+        User user2 = new User(0, "Joao", "joao@gmail.com", null, null);
+        User user3 = new User(0, "Carvel", "carvel2@gmail.com", null, null);
 
         repository.save(user1);
         repository.save(user2);
@@ -59,37 +33,21 @@ public class Main {
         System.out.println();
         System.out.println("ID > 1:");
 
-        List<User> greaterThan = repository.findBy(
-                "id",
-                1,
-                Operator.GREATER_THAN
-        );
+        List<User> greaterThan = repository.findBy("id", 1, Operator.GREATER_THAN);
 
         for (User user : greaterThan) {
 
-            System.out.println(
-                    "ID: " + user.getId()
-                            + " | Name: " + user.getName()
-                            + " | Email: " + user.getEmail()
-            );
+            System.out.println("ID: " + user.getId() + " | Name: " + user.getName() + " | Email: " + user.getEmail());
         }
 
         System.out.println();
         System.out.println("ID <= 2:");
 
-        List<User> lessThanOrEqual = repository.findBy(
-                "id",
-                2,
-                Operator.LESS_THAN_OR_EQUAL
-        );
+        List<User> lessThanOrEqual = repository.findBy("id", 2, Operator.LESS_THAN_OR_EQUAL);
 
         for (User user : lessThanOrEqual) {
 
-            System.out.println(
-                    "ID: " + user.getId()
-                            + " | Name: " + user.getName()
-                            + " | Email: " + user.getEmail()
-            );
+            System.out.println("ID: " + user.getId() + " | Name: " + user.getName() + " | Email: " + user.getEmail());
         }
 
         connection.close();

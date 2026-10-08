@@ -17,9 +17,12 @@ public class User {
     private Address address;
     protected String temporary;
 
-    public User () {}
+    public User () {
+
+    }
 
     public User (int id, String name, String email, Address address, String temporary) {
+
         this.id = id;
         this.name = name;
         this.email = email;
@@ -27,23 +30,28 @@ public class User {
         this.temporary = temporary;
     }
 
-    public int getId() {
+    public int getId () {
+
         return id;
     }
 
-    public String getName() {
+    public String getName () {
+
         return name;
     }
 
-    public String getEmail() {
+    public String getEmail () {
+
         return email;
     }
 
-    public Address getAddress() {
+    public Address getAddress () {
+
         return address;
     }
 
-    public String getTemporary() {
+    public String getTemporary () {
+
         return temporary;
     }
 }

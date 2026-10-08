@@ -13,15 +13,18 @@ public class QueryCondition {
         this.operator = operator;
     }
 
-    public String getColumnName() {
+    public String getColumnName () {
+
         return columnName;
     }
 
-    public Object getValue() {
+    public Object getValue () {
+
         return value;
     }
 
-    public Operator getOperator() {
+    public Operator getOperator () {
+
         return operator;
     }
 }

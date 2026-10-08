@@ -15,18 +15,22 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SqlGeneratorTest {
+
     private final SqlGenerator generator = new SqlGenerator();
 
     @ParameterizedTest
     @MethodSource("invalidTables")
-    void validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table table) {
+    void validatesTablesAtSqlGenerationRatherThanSchemaBuilding (Table table) {
+
         assertThrows(IllegalArgumentException.class, () -> generator.createTable(table));
         assertThrows(IllegalArgumentException.class, () -> generator.insert(table, List.of(new Row("id", 1))));
     }
 
-    static Stream<Table> invalidTables() {
+    static Stream<Table> invalidTables () {
+
         var builder = new SchemaBuilder();
         var columns = List.of(new ColumnDefinition("id", int.class));
+
         return Stream.of(null, builder.build(null, columns), builder.build(" ", columns),
                 builder.build("people", null), builder.build("people", List.of()),
                 builder.build("people", Arrays.asList((ColumnDefinition) null)),
@@ -38,16 +42,17 @@ class SqlGeneratorTest {
     }
 
     @Test
-    void buildsCreateTableForSupportedTypes() {
+    void buildsCreateTableForSupportedTypes () {
+
         var table = new Table("people", List.of(new ColumnDefinition("id", int.class),
                 new ColumnDefinition("name", String.class), new ColumnDefinition("total", Long.class),
                 new ColumnDefinition("active", boolean.class), new ColumnDefinition("score", Double.class)));
-        assertEquals("CREATE TABLE people (id INTEGER, name VARCHAR, total BIGINT, active BOOLEAN, score DOUBLE);",
-                generator.createTable(table));
+        assertEquals("CREATE TABLE people (id INTEGER, name VARCHAR, total BIGINT, active BOOLEAN, score DOUBLE);", generator.createTable(table));
     }
 
     @Test
-    void insertsEscapedTextNullAndSupportedValues() {
+    void insertsEscapedTextNullAndSupportedValues () {
+
         var table = new Table("people", List.of(new ColumnDefinition("id", int.class),
                 new ColumnDefinition("name", String.class), new ColumnDefinition("optional", String.class),
                 new ColumnDefinition("total", long.class), new ColumnDefinition("active", boolean.class),
@@ -59,12 +64,14 @@ class SqlGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("invalidRows")
-    void rejectsInvalidInsertRows(List<Row> rows) {
+    void rejectsInvalidInsertRows (List<Row> rows) {
+
         var table = new Table("people", List.of(new ColumnDefinition("id", int.class)));
         assertThrows(IllegalArgumentException.class, () -> generator.insert(table, rows));
     }
 
-    static Stream<List<Row>> invalidRows() {
+    static Stream<List<Row>> invalidRows () {
+
         return Stream.of(null, List.of(), Arrays.asList((Row) null), List.of(new Row(null, 1)),
                 List.of(new Row(" ", 1)), List.of(new Row("id", 1), new Row("ID", 2)),
                 List.of(new Row("unknown", 1)), List.of(new Row("id", "wrong type")));
