@@ -1,0 +1,1634 @@
+{
+  "date": "2026-10-08",
+  "timezone": "America/Sao_Paulo",
+  "candidate": "v0.0.1",
+  "pom_version": "1.0-SNAPSHOT",
+  "production_revision": "4287593",
+  "test_revision": "9c7345857b86c580b58280fe6547e8654ba155b6",
+  "environment": {
+    "os": "Windows 11 amd64",
+    "java": "Temurin 17.0.20.1",
+    "maven": "3.9.14",
+    "junit": "5.11.4",
+    "h2": "2.5.250",
+    "jacoco": "0.8.12"
+  },
+  "baseline": {
+    "compiled": false,
+    "compiler_errors": 19,
+    "reason": "Obsolete two-argument ColumnDefinition constructor in tests",
+    "cases_after_test_api_update": 53
+  },
+  "regular": {
+    "command": "mvn -Pcoverage verify",
+    "exit_code": 0,
+    "totals": {
+      "tests": 181,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "name": "org.com.dev.carvel.analysis.AnalysisTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.136,
+        "cases": [
+          {
+            "name": "analyzesOneColumnAndIgnoresUnannotatedFields",
+            "status": "passed",
+            "seconds": 0.045
+          },
+          {
+            "name": "readsPrivateProtectedAndNullValues",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "rejectsNullTypeAndObject",
+            "status": "passed",
+            "seconds": 0.005
+          },
+          {
+            "name": "rejectsWhitespaceColumnNameInBothAnalyzers",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsDuplicateColumnNamesIgnoringCaseInBothAnalyzers",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsEmptyColumnNameInBothAnalyzers",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "allowsEntitiesWithoutColumns",
+            "status": "passed",
+            "seconds": 0.004
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.analysis.EntityMetadataTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.134,
+        "cases": [
+          {
+            "name": "explainsMissingIdAndMissingIdColumn",
+            "status": "passed",
+            "seconds": 0.011
+          },
+          {
+            "name": "writesGeneratedValueAndLeavesManualIdsAlone",
+            "status": "passed",
+            "seconds": 0.005
+          },
+          {
+            "name": "skipsGeneratedIdButIncludesManualId",
+            "status": "passed",
+            "seconds": 0.007
+          },
+          {
+            "name": "readsTableNameAndIdMetadata",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsNullValuesAndIncompatibleGeneratedKeys",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "supportsAnIdWithoutGeneratedValue",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsInvalidIdDeclarations(Class)[1]",
+            "status": "passed",
+            "seconds": 0.013
+          },
+          {
+            "name": "rejectsInvalidIdDeclarations(Class)[2]",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsInvalidIdDeclarations(Class)[3]",
+            "status": "passed",
+            "seconds": 0.002
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.mapper.ObjectMapperEdgeTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.039,
+        "cases": [
+          {
+            "name": "requiresAnAccessibleNoArgumentConstructor",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "retainsOriginalEntityDefaultsForUnannotatedFields",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "propagatesAnExceptionThrownByTheConstructor",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsAbstractEntityInstantiation",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "mapsAllBoxedSupportedTypesAndNulls",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "mapsColumnsInArbitraryOrderAndDoesNotMutateRows",
+            "status": "passed",
+            "seconds": 0.002
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.mapper.ObjectMapperTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.066,
+        "cases": [
+          {
+            "name": "mapsIgnoringCaseAndExtraColumns",
+            "status": "passed",
+            "seconds": 0.007
+          },
+          {
+            "name": "rejectsNullPrimitiveField",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsMissingAnnotatedColumn",
+            "status": "passed",
+            "seconds": 0.008
+          },
+          {
+            "name": "rejectsEmptyRows",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidColumnName(String)[1]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidColumnName(String)[2]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidColumnName(String)[3]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidColumnName(String)[4]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "allowsNullObjectFields",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsIncompatibleFieldType",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsNullRows",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsNullType",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "explainsMissingNoArgumentConstructor",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsNullRowInsideList",
+            "status": "passed",
+            "seconds": 0.001
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.repository.RepositoryIntegrationTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 2.062,
+        "cases": [
+          {
+            "name": "evaluatesAndOrNullsAndNativeSqlPrecedence",
+            "status": "passed",
+            "seconds": 0.981
+          },
+          {
+            "name": "supportsLongGeneratedKeysAndTextKeysWithoutQuotes",
+            "status": "passed",
+            "seconds": 0.028
+          },
+          {
+            "name": "supportsSaveAndSearchForEntityWithoutPrimaryKey",
+            "status": "passed",
+            "seconds": 0.011
+          },
+          {
+            "name": "roundTripsBoundariesAndLongText",
+            "status": "passed",
+            "seconds": 0.011
+          },
+          {
+            "name": "matchesAnIndependentJavaOracleForDeterministicMixedFilters",
+            "status": "passed",
+            "seconds": 0.159
+          },
+          {
+            "name": "roundTripsBoxedFieldsWithValuesOrNulls(boolean)[1]",
+            "status": "passed",
+            "seconds": 0.01
+          },
+          {
+            "name": "roundTripsBoxedFieldsWithValuesOrNulls(boolean)[2]",
+            "status": "passed",
+            "seconds": 0.012
+          },
+          {
+            "name": "processesFiveHundredRecordsAndMaintainsIsolation",
+            "status": "passed",
+            "seconds": 0.444
+          },
+          {
+            "name": "identicalEntitySchemasInDifferentDatabasesRemainIsolated",
+            "status": "passed",
+            "seconds": 0.009
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[1]",
+            "status": "passed",
+            "seconds": 0.025
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[2]",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[3]",
+            "status": "passed",
+            "seconds": 0.009
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[4]",
+            "status": "passed",
+            "seconds": 0.008
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[5]",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "evaluatesAllComparisonOperators(Operator, String)[6]",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "completesCrudLifecycleWithGeneratedIdAndPreservesOtherRecords",
+            "status": "passed",
+            "seconds": 0.01
+          },
+          {
+            "name": "participatesInCallerManagedRollbackAndCommit",
+            "status": "passed",
+            "seconds": 0.013
+          },
+          {
+            "name": "supportsTheProjectsUserEntity",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "missingUpdateAndDeleteAreNoOpsAndClosedConnectionFails",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[1]",
+            "status": "passed",
+            "seconds": 0.01
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[2]",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[3]",
+            "status": "passed",
+            "seconds": 0.007
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[4]",
+            "status": "passed",
+            "seconds": 0.017
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[5]",
+            "status": "passed",
+            "seconds": 0.008
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[6]",
+            "status": "passed",
+            "seconds": 0.008
+          },
+          {
+            "name": "roundTripsDifficultTextThroughAllQueryApis(String)[7]",
+            "status": "passed",
+            "seconds": 0.005
+          },
+          {
+            "name": "rejectsInvalidQueriesAndEntitiesWithoutChangingExistingRows",
+            "status": "passed",
+            "seconds": 0.028
+          },
+          {
+            "name": "supportsManualKeysAndRejectsDuplicatePrimaryKeyWithoutLosingData",
+            "status": "passed",
+            "seconds": 0.009
+          },
+          {
+            "name": "committedDataBecomesVisibleToAnotherRepositoryOnAnotherConnection",
+            "status": "passed",
+            "seconds": 0.102
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.sql.GeneratedKeyExecutorTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.108,
+        "cases": [
+          {
+            "name": "returnsNullWhenThereIsNoGeneratedKey",
+            "status": "passed",
+            "seconds": 0.016
+          },
+          {
+            "name": "returnsGeneratedIntegerAndLongKeys",
+            "status": "passed",
+            "seconds": 0.008
+          },
+          {
+            "name": "propagatesSqlErrorsAndRetainsCallerConnection",
+            "status": "passed",
+            "seconds": 0.022
+          },
+          {
+            "name": "closesOwnedResourcesOnSuccessAndAtEachFailurePoint(String)[1]",
+            "status": "passed",
+            "seconds": 0.041
+          },
+          {
+            "name": "closesOwnedResourcesOnSuccessAndAtEachFailurePoint(String)[2]",
+            "status": "passed",
+            "seconds": 0.006
+          },
+          {
+            "name": "closesOwnedResourcesOnSuccessAndAtEachFailurePoint(String)[3]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "closesOwnedResourcesOnSuccessAndAtEachFailurePoint(String)[4]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "closesOwnedResourcesOnSuccessAndAtEachFailurePoint(String)[5]",
+            "status": "passed",
+            "seconds": 0.001
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlExecutorTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.073,
+        "cases": [
+          {
+            "name": "closesResultSetAndStatementWhenReadingFails",
+            "status": "passed",
+            "seconds": 0.022
+          },
+          {
+            "name": "rejectsNullConnection",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "preservesSelectAliasesAsColumnNames",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsInvalidSql(String)[1]",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsInvalidSql(String)[2]",
+            "status": "passed",
+            "seconds": 0.005
+          },
+          {
+            "name": "rejectsInvalidSql(String)[3]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidSql(String)[4]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "createsInsertsQueriesAndMapsMultipleEntities",
+            "status": "passed",
+            "seconds": 0.011
+          },
+          {
+            "name": "closesStatementWhenExecuteFails",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "closesStatementWhenQueryFailsBeforeResultSetExists",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "returnsEmptyListForSelectWithoutResults",
+            "status": "passed",
+            "seconds": 0.005
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlGeneratorTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.079,
+        "cases": [
+          {
+            "name": "insertsEscapedTextNullAndSupportedValues",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[1]",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[2]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[3]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[4]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[5]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[6]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[7]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidInsertRows(List)[8]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[1]",
+            "status": "passed",
+            "seconds": 0.005
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[2]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[3]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[4]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[5]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[6]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[7]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[8]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[9]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[10]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "validatesTablesAtSqlGenerationRatherThanSchemaBuilding(Table)[11]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "buildsCreateTableForSupportedTypes",
+            "status": "passed",
+            "seconds": 0.002
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlQueryTest",
+        "tests": 53,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.12,
+        "cases": [
+          {
+            "name": "rejectsOrderedComparisonWithNull(Operator)[1]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rejectsOrderedComparisonWithNull(Operator)[2]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsOrderedComparisonWithNull(Operator)[3]",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "rejectsOrderedComparisonWithNull(Operator)[4]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rendersNullEqualityAndInequality",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[1]",
+            "status": "passed",
+            "seconds": 0.004
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[2]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[3]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[4]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[5]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[6]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[7]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[8]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[9]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[10]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidWriteInputsAlreadyValidatedByTheApi()[11]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "combinesConditionsAndLogicalFiltersWithoutMutatingInputs",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "ignoresFirstLogicalOperatorAndPreservesMixedSqlPrecedence",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "preservesSqlLookingTextAndEscapesQuotes",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersSelectAllAndIdSelection",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[1]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[2]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[3]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[4]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[5]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersEveryComparison(Operator, String)[6]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rendersUpdateDeleteAndIdentitySchema",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[1]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[2]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[3]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[4]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[5]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[6]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[7]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[8]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[9]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[10]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[11]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[12]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[13]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[14]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[15]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[16]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[17]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[18]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[19]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[20]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[21]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[22]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[23]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[24]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[25]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsInvalidQueryInputs()[26]",
+            "status": "passed",
+            "seconds": 0.0
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.sql.TypeMapperTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.05,
+        "cases": [
+          {
+            "name": "rejectsUnsupportedTypes(Class)[1]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[2]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[3]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[4]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[5]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[6]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[7]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[8]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[9]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "rejectsUnsupportedTypes(Class)[10]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "rejectsNullType",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[1]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[2]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[3]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[4]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[5]",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[6]",
+            "status": "passed",
+            "seconds": 0.0
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[7]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[8]",
+            "status": "passed",
+            "seconds": 0.002
+          },
+          {
+            "name": "mapsPrimitiveAndBoxedTypes(Class, SqlType)[9]",
+            "status": "passed",
+            "seconds": 0.001
+          }
+        ]
+      },
+      {
+        "name": "org.com.dev.carvel.SystemSmokeTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.024,
+        "cases": [
+          {
+            "name": "opensDatabaseThroughPublicConnectionFactory",
+            "status": "passed",
+            "seconds": 0.003
+          },
+          {
+            "name": "propagatesUnsupportedJdbcUrl",
+            "status": "passed",
+            "seconds": 0.001
+          },
+          {
+            "name": "runsTheActualMainAndPrintsExpectedAndOrResults",
+            "status": "passed",
+            "seconds": 0.014
+          }
+        ]
+      }
+    ]
+  },
+  "individual": {
+    "command_template": "mvn -Dtest=CLASS -Dtest.reportsDirectory=target/individual-reports/CLASS test",
+    "suites": [
+      {
+        "name": "org.com.dev.carvel.analysis.AnalysisTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.086
+      },
+      {
+        "name": "org.com.dev.carvel.analysis.EntityMetadataTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.171
+      },
+      {
+        "name": "org.com.dev.carvel.sql.GeneratedKeyExecutorTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.582
+      },
+      {
+        "name": "org.com.dev.carvel.mapper.ObjectMapperEdgeTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.088
+      },
+      {
+        "name": "org.com.dev.carvel.mapper.ObjectMapperTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.168
+      },
+      {
+        "name": "org.com.dev.carvel.repository.RepositoryIntegrationTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 1.437
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlExecutorTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.586
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlGeneratorTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.228
+      },
+      {
+        "name": "org.com.dev.carvel.sql.SqlQueryTest",
+        "tests": 53,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.287
+      },
+      {
+        "name": "org.com.dev.carvel.SystemSmokeTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.421
+      },
+      {
+        "name": "org.com.dev.carvel.sql.TypeMapperTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.189
+      }
+    ],
+    "totals": {
+      "tests": 181,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "full_audit": {
+    "command": "mvn -Pdefect-audit test",
+    "exit_code": 1,
+    "totals": {
+      "tests": 206,
+      "failures": 25,
+      "errors": 0,
+      "skipped": 0
+    },
+    "known_defect_suites": [
+      {
+        "name": "org.com.dev.carvel.audit.KnownDefectsTest",
+        "tests": 25,
+        "failures": 25,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 0.618,
+        "cases": [
+          {
+            "name": "D01_textKeyCannotBroadenAnUpdateToOtherRecords",
+            "status": "failed",
+            "seconds": 0.408,
+            "message": "expected: <untouched> but was: <changed>"
+          },
+          {
+            "name": "D06_ignoresStaticAnnotatedFieldsWhenBuildingAnEntity",
+            "status": "failed",
+            "seconds": 0.004,
+            "message": "expected: <[label]> but was: <[global, label]>"
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[1]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[2]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[3]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[4]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[5]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D10_validatesTableMetadataConsistentlyAcrossOperations(String, String)[6]",
+            "status": "failed",
+            "seconds": 0.005,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D09_generatedKeyExecutionValidatesNullConnection",
+            "status": "failed",
+            "seconds": 0.001,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D01_updateEscapesAnApostropheInTextPrimaryKey",
+            "status": "failed",
+            "seconds": 0.007,
+            "message": "Unexpected exception thrown: org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement \"UPDATE text_records SET label = 'updated' WHERE id = 'O'Brien[*]';\"; SQL statement:\nUPDATE text_records SET label = 'updated' WHERE id = 'O'Brien'; [42000-250]"
+          },
+          {
+            "name": "D11_rejectsNonFiniteNumbersInsteadOfProducingInvalidSql(double)[1]",
+            "status": "failed",
+            "seconds": 0.006,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D11_rejectsNonFiniteNumbersInsteadOfProducingInvalidSql(double)[2]",
+            "status": "failed",
+            "seconds": 0.007,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D11_rejectsNonFiniteNumbersInsteadOfProducingInvalidSql(double)[3]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D03_deleteCannotBroadenItsTargetThroughAnUncheckedIdentifier",
+            "status": "failed",
+            "seconds": 0.014,
+            "message": "expected: <2> but was: <0>"
+          },
+          {
+            "name": "D04_savesAnEntityContainingOnlyAnIdentityColumn",
+            "status": "failed",
+            "seconds": 0.037,
+            "message": "Unexpected exception thrown: java.lang.IllegalArgumentException: Insert requires at least one row"
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[1]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[2]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[3]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[4]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[5]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[6]",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D02_updateRejectsInvalidInputsBeforeGeneratingSql(String)[7]",
+            "status": "failed",
+            "seconds": 0.003,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D05_includesInheritedAnnotatedId",
+            "status": "failed",
+            "seconds": 0.006,
+            "message": "Unexpected exception thrown: java.lang.IllegalArgumentException: Entity does not contain an @Id field"
+          },
+          {
+            "name": "D08_rejectsGeneratedValueWithoutColumnAnnotation",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          },
+          {
+            "name": "D07_rejectsDuplicateResultColumnLabelsInsteadOfSilentlyOverwriting",
+            "status": "failed",
+            "seconds": 0.002,
+            "message": "Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown."
+          }
+        ]
+      }
+    ]
+  },
+  "coverage": {
+    "scope": "Regular suite only; known-defect tests excluded",
+    "totals": {
+      "instruction": {
+        "covered": 2985,
+        "missed": 41,
+        "percent": 98.65
+      },
+      "branch": {
+        "covered": 348,
+        "missed": 6,
+        "percent": 98.31
+      },
+      "line": {
+        "covered": 698,
+        "missed": 15,
+        "percent": 97.9
+      },
+      "method": {
+        "covered": 73,
+        "missed": 7,
+        "percent": 91.25
+      }
+    },
+    "classes": [
+      {
+        "class": "org.com.dev.carvel.user.User",
+        "line": {
+          "covered": 13,
+          "missed": 1,
+          "percent": 92.86
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.analysis.Analysis",
+        "line": {
+          "covered": 44,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 35,
+          "missed": 1,
+          "percent": 97.22
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.analysis.ValueAnalysis",
+        "line": {
+          "covered": 36,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 24,
+          "missed": 0,
+          "percent": 100.0
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.container.Container",
+        "line": {
+          "covered": 0,
+          "missed": 6,
+          "percent": 0.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.row.Row",
+        "line": {
+          "covered": 6,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.schemaBuilder.SchemaBuilder",
+        "line": {
+          "covered": 2,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.repository.Repository",
+        "line": {
+          "covered": 81,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 12,
+          "missed": 0,
+          "percent": 100.0
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.query.Operator",
+        "line": {
+          "covered": 7,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.query.LogicalOperator",
+        "line": {
+          "covered": 3,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.query.QueryCondition",
+        "line": {
+          "covered": 8,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.query.QueryFilter",
+        "line": {
+          "covered": 6,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.schema.Schema",
+        "line": {
+          "covered": 0,
+          "missed": 1,
+          "percent": 0.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.table.Table",
+        "line": {
+          "covered": 6,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.columnDefinition.ColumnDefinition",
+        "line": {
+          "covered": 10,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.address.Address",
+        "line": {
+          "covered": 0,
+          "missed": 5,
+          "percent": 0.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.Main",
+        "line": {
+          "covered": 40,
+          "missed": 1,
+          "percent": 97.56
+        },
+        "branch": {
+          "covered": 4,
+          "missed": 0,
+          "percent": 100.0
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.DatabaseConnection",
+        "line": {
+          "covered": 2,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.mapper.ObjectMapper",
+        "line": {
+          "covered": 34,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 29,
+          "missed": 1,
+          "percent": 96.67
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.sql.SqlType",
+        "line": {
+          "covered": 6,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 0,
+          "missed": 0,
+          "percent": null
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.sql.TypeMapper",
+        "line": {
+          "covered": 14,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 20,
+          "missed": 0,
+          "percent": 100.0
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.sql.SqlGenerator",
+        "line": {
+          "covered": 350,
+          "missed": 1,
+          "percent": 99.72
+        },
+        "branch": {
+          "covered": 210,
+          "missed": 2,
+          "percent": 99.06
+        }
+      },
+      {
+        "class": "org.com.dev.carvel.sql.SqlExecutor",
+        "line": {
+          "covered": 30,
+          "missed": 0,
+          "percent": 100.0
+        },
+        "branch": {
+          "covered": 14,
+          "missed": 2,
+          "percent": 87.5
+        }
+      }
+    ]
+  },
+  "production_files_changed": false
+}

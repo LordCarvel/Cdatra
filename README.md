@@ -1,85 +1,98 @@
 # Cdatra
 
 Projeto de aprendizado em Java 17 para reduzir o trabalho repetitivo com JDBC.
-Hoje possui análise de campos com `@Column`, geração de `CREATE TABLE` e `INSERT`,
-execução JDBC e mapeamento de resultados para objetos. As peças ainda são chamadas
-separadamente; não há uma API de CRUD pronta.
+Repository coordena análise de entidades, geração de SQL, execução JDBC e
+mapeamento de resultados para objetos.
+
+Hoje há criação de tabela, INSERT com retorno de chave gerada, buscas, UPDATE e
+DELETE. As entidades usam `@Entity`, `@Column`, `@Id` e `@GeneratedValue`. Os nomes
+atuais da API foram preservados: `analize`, `columName` e `tableNaame`.
+
+## Avaliação da v0.0.1
+
+A bateria de 08/10/2026 possui **206 casos distintos**:
+
+- **181 casos regulares passam**, individualmente por classe e na suíte conjunta.
+- **25 casos de auditoria falham**, reproduzindo 11 grupos de defeitos e limitações.
+- Cobertura regular: **97,90% das linhas** e **98,31% das decisões**.
+
+O UPDATE com chave textual contendo apóstrofo pode alterar registros indevidos.
+O DELETE direto pelo SqlGenerator aceita identificadores que ampliam sua condição.
+Há sobrescrita silenciosa de labels duplicados no mapper e validações
+inconsistentes. **Um build regular verde não aprova a release.**
+
+O [relatório completo](docs/testing/v0.0.1-report.md) apresenta casos, reproduções,
+prioridades e limites. O [inventário de resultados](docs/testing/v0.0.1-results.json)
+registra cada caso, os resultados por classe e a cobertura medida.
+
+Esta revisão não corrigiu o código de produção. v0.0.1 identifica o marco
+solicitado; o `pom.xml` continua com `1.0-SNAPSHOT`.
 
 ## Rodar os testes
 
-Com JDK 17 e Maven disponíveis, na pasta do projeto:
+Com JDK 17 e Maven, na raiz do projeto:
 
 ```shell
 mvn test
+mvn -Pcoverage clean verify
 ```
 
-No IntelliJ IDEA, abra o `pom.xml` como projeto Maven, configure o JDK 17 e use
-**Maven → Lifecycle → test**. Também é possível executar uma classe de teste pelo
-ícone ao lado dela no editor. O Maven baixa JUnit e H2 na primeira execução.
-Os testes usam H2 em memória: não exigem servidor nem alteram um banco externo.
+Os testes usam H2 em memória, sem servidor e sem alterar bancos externos. Maven
+baixa as dependências na primeira execução. No IntelliJ IDEA, abra o `pom.xml`
+como projeto Maven, configure o JDK 17 e use **Maven → Lifecycle → test**.
 
-Para executar só um grupo:
+O perfil `coverage` gera HTML, XML e CSV em `target/site/jacoco/`. O comando
+`verify` também gera o JAR em `target/`.
+
+Para executar grupos individuais:
 
 ```shell
-mvn -Dtest=AnalysisTest test
-mvn -Dtest=ObjectMapperTest test
-mvn -Dtest=SqlExecutorTest test
-mvn -Dtest=SqlGeneratorTest test
+mvn -Dtest=AnalysisTest,EntityMetadataTest test
+mvn -Dtest=TypeMapperTest test
+mvn -Dtest=ObjectMapperTest,ObjectMapperEdgeTest test
+mvn -Dtest=SqlGeneratorTest,SqlQueryTest test
+mvn -Dtest=SqlExecutorTest,GeneratedKeyExecutorTest test
+mvn -Dtest=RepositoryIntegrationTest test
+mvn -Dtest=SystemSmokeTest test
 ```
 
-São 53 casos, contando as entradas dos testes parametrizados:
+Para incluir todos os contratos de defeitos ou executar somente esses casos:
 
-| Grupo | Casos | O que verifica |
-| --- | ---: | --- |
-| AnalysisTest | 7 | Metadados e valores; entradas nulas; nomes vazios e duplicados; campos privados/protegidos; campos ignorados e valores nulos |
-| ObjectMapperTest | 14 | Entradas inválidas; colunas ausentes/extras; nomes sem distinção de maiúsculas; nulos; tipos incompatíveis; construtor sem argumentos |
-| SqlExecutorTest | 11 | Entradas inválidas; consulta vazia; múltiplas linhas e colunas; aliases; fechamento em falhas; fluxo integrado |
-| SqlGeneratorTest | 21 | Validação de tabelas e INSERT; tipos suportados; escape de apóstrofos; NULL; validação após SchemaBuilder |
-
-O teste `createsInsertsQueriesAndMapsMultipleEntities` reúne o fluxo real:
-
-```text
-Analysis → SchemaBuilder → CREATE TABLE → ValueAnalysis → INSERT
-→ SELECT → ObjectMapper → conferência dos valores
+```shell
+mvn -Pdefect-audit test
+mvn -Pdefect-audit -Dtest=KnownDefectsTest test
 ```
 
-## Regras desta revisão
+**A auditoria deve falhar na revisão avaliada.** Seus testes têm a tag
+`known-defect`, excluída explicitamente do perfil regular. Não estão desabilitados
+e não aprovam o comportamento incorreto: verificam o contrato esperado e mostram
+a falha atual. Quando corrigidos, devem passar e sair dessa categoria.
 
-- `ObjectMapper.map` recebe as colunas de **um registro**. Lista nula/vazia,
-  item nulo ou nome de coluna nulo/em branco gera `IllegalArgumentException`.
-- Colunas extras são ignoradas; uma `@Column` ausente no resultado é erro.
-  `null` em campo objeto é permitido; em primitivo é rejeitado.
-- A entidade mapeada precisa de um construtor sem argumentos acessível.
-  Não há conversão automática entre tipos incompatíveis.
-- `SqlExecutor.query` retorna uma lista vazia se o SELECT não encontrar registros.
-  Cada item dessa lista representa um registro; só os registros existentes vão ao mapper.
-- `Statement` e `ResultSet` são fechados mesmo em falhas. Quem forneceu a
-  `Connection` continua responsável por fechá-la.
-- `Analysis` e `ValueAnalysis` rejeitam nomes de `@Column` em branco ou duplicados,
-  incluindo nomes que diferem apenas por maiúsculas/minúsculas.
-- Entidades sem `@Column` produzem listas vazias na análise. `SchemaBuilder`,
-  `Table`, `Row` e `ColumnDefinition` continuam simples; a validação da tabela
-  fica no `SqlGenerator`, tanto para CREATE quanto para INSERT.
+Resultados ficam em `target/surefire-reports` e, para a auditoria, em
+`target/defect-audit-reports`. O comando `clean` remove esses arquivos. O JSON
+versionado é uma fotografia da avaliação, sem atualização automática por Maven.
 
-## Avaliação e próximos passos
+## Comportamento verificado
 
-A avaliação do prompt faz sentido quanto à base: reflection, metadados, SQL,
-JDBC e retorno para objetos já estão presentes. O teste integrado confirma esse
-ciclo. A estimativa de “65%–70%” não tem critério verificável; é mais útil medir
-o que a biblioteca consegue fazer.
+- Repository oferece `createTable`, `save`, `findAll`, `findById`, `findBy`,
+  `findByConditions`, `findByFilters`, `update` e `delete`.
+- IDs Integer/Long gerados são atribuídos à entidade após save; IDs manuais também
+  foram testados. Operações por ID exigem `@Id`.
+- O mapper recebe as colunas de um registro. Colunas extras são ignoradas; colunas
+  anotadas ausentes são erro. O construtor sem argumentos precisa ser acessível.
+- Nulos são aceitos em campos objeto; campos primitivos não podem receber null.
+  Os tipos suportados são int/Integer, long/Long, boolean/Boolean, double/Double
+  e String. Não há uma camada geral de conversão de tipos.
+- Listas de QueryCondition usam AND. QueryFilter acrescenta AND/OR, com a
+  precedência nativa de SQL e sem agrupamento explícito por parênteses. A API não
+  garante ordenação sem ORDER BY.
+- Buscas sem resultado retornam lista vazia; findById retorna null.
+- Statement, PreparedStatement e ResultSet são fechados nos caminhos testados de
+  sucesso e falha. Quem forneceu a Connection continua responsável por fechá-la.
+- Commit e rollback pertencem ao chamador. Foram testados CRUD em transações e
+  visibilidade entre duas conexões; não foi testado acesso simultâneo por threads.
 
-`@Entity` existe, mas seu nome de tabela ainda não é consumido pelas peças atuais:
-o nome é passado manualmente ao `SchemaBuilder`. `UPDATE`, `DELETE` e uma camada
-que coordene as peças ainda faltam para o objetivo de reaproveitar CRUD nos próximos
-projetos. Eles não foram implementados nesta revisão.
-
-Para praticar Java, a estrutura atual é uma base coerente e não precisa agora de
-relacionamentos, migrations, cache ou lazy loading. Depois desta bateria, faz
-sentido avançar em uma funcionalidade útil por vez. A definição de `v0.0.1` é sua;
-CRUD completo é um marco razoável para o seu objetivo, mas não uma regra universal.
-
-Antes de reutilizar com dados externos, um próximo passo importante será usar
-parâmetros JDBC (`PreparedStatement`) em vez de montar os valores dentro do SQL.
-Nesta revisão, foi mantido e testado o escape de apóstrofos já existente.
-Também foram preservados os nomes atuais da API (`analize`, `columName` e
-`tableNaame`) para evitar uma renomeação fora do escopo.
+A avaliação foi feita com H2 2.5.250 em memória. Não certifica outros bancos,
+persistência em disco ou desempenho em produção. O relatório detalha os problemas
+com herança, campos static, entidade com apenas ID gerado, valores não finitos
+e entradas inválidas.
