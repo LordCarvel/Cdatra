@@ -38,7 +38,13 @@ class SqlGeneratorTest {
                 builder.build("people", List.of(new ColumnDefinition(" ", int.class, false, false))),
                 builder.build("people", List.of(new ColumnDefinition("id", null, false, false))),
                 builder.build("people", List.of(new ColumnDefinition("id", Object.class, false, false))),
-                builder.build("people", List.of(new ColumnDefinition("id", int.class, false, false), new ColumnDefinition("ID", int.class, false, false))));
+                builder.build("people", List.of(new ColumnDefinition("id", int.class, false, false), new ColumnDefinition("ID", int.class, false, false))),
+                builder.build("people; DROP TABLE people; --", columns),
+                builder.build("people", List.of(new ColumnDefinition("id = 1 OR id", int.class, true, false))),
+                builder.build("people", List.of(new ColumnDefinition("id", int.class, false, true))),
+                builder.build("people", List.of(new ColumnDefinition("id", String.class, true, true))),
+                builder.build("people", List.of(new ColumnDefinition("id", boolean.class, true, true))),
+                builder.build("people", List.of(new ColumnDefinition("id", int.class, true, false), new ColumnDefinition("other_id", int.class, true, false))));
     }
 
     @Test
@@ -66,7 +72,7 @@ class SqlGeneratorTest {
     @MethodSource("invalidRows")
     void rejectsInvalidInsertRows (List<Row> rows) {
 
-        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false)));
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, true, false)));
         assertThrows(IllegalArgumentException.class, () -> generator.insert(table, rows));
     }
 
@@ -74,6 +80,6 @@ class SqlGeneratorTest {
 
         return Stream.of(null, List.of(), Arrays.asList((Row) null), List.of(new Row(null, 1)),
                 List.of(new Row(" ", 1)), List.of(new Row("id", 1), new Row("ID", 2)),
-                List.of(new Row("unknown", 1)), List.of(new Row("id", "wrong type")));
+                List.of(new Row("unknown", 1)), List.of(new Row("id", "wrong type")), List.of(new Row("id", null)));
     }
 }

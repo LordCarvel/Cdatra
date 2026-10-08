@@ -7,7 +7,9 @@ import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Analysis {
@@ -20,10 +22,25 @@ public class Analysis {
         }
 
         int idCount = 0;
-        Field[] fields = value.getDeclaredFields();
+        List<Field> fields = new ArrayList<>();
         List<ColumnDefinition> columns = new ArrayList<>();
 
+        for (Class<?> current = value; current != null && current != Object.class; current = current.getSuperclass()) {
+
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+        }
+
         for (Field field : fields) {
+
+            if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+
+                continue;
+            }
+
+            if (field.isAnnotationPresent(GeneratedValue.class) && !field.isAnnotationPresent(Column.class)) {
+
+                throw new IllegalArgumentException("@GeneratedValue field must also be annotated with @Column");
+            }
 
             if (field.isAnnotationPresent(Id.class)) {
 
@@ -45,6 +62,11 @@ public class Analysis {
                     throw new IllegalArgumentException("Column name cannot be null or blank");
                 }
 
+                if (!name.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+
+                    throw new IllegalArgumentException("Invalid column name: " + name);
+                }
+
                 for (ColumnDefinition existing : columns) {
 
                     if (name.equalsIgnoreCase(existing.getName())) {
@@ -59,6 +81,13 @@ public class Analysis {
                 if (isGeneratedValue && !isId) {
 
                     throw new IllegalArgumentException("@GeneratedValue field must also be annotated with @Id");
+                }
+
+                Class<?> type = field.getType();
+
+                if (isGeneratedValue && type != int.class && type != Integer.class && type != long.class && type != Long.class) {
+
+                    throw new IllegalArgumentException("Generated ID must use int, Integer, long or Long");
                 }
 
                 columns.add(new ColumnDefinition(column.columName(), field.getType(), isId, isGeneratedValue));
@@ -86,8 +115,14 @@ public class Analysis {
         }
 
         Entity entity = value.getAnnotation(Entity.class);
+        String tableName = entity.tableNaame();
 
-        return entity.tableNaame();
+        if (tableName == null || !tableName.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
+
+        return tableName;
     }
 
     public String analyzeIdColumnName (Class<?> value) {
@@ -97,20 +132,11 @@ public class Analysis {
             throw new IllegalArgumentException("Analyzed type cannot be null");
         }
 
-        Field[] fields = value.getDeclaredFields();
+        for (ColumnDefinition column : analize(value)) {
 
-        for (Field field : fields) {
+            if (column.isId()) {
 
-            if (field.isAnnotationPresent(Id.class)) {
-
-                if (!field.isAnnotationPresent(Column.class)) {
-
-                    throw new IllegalArgumentException("@Id field must also be annotated with @Column");
-                }
-
-                Column column = field.getAnnotation(Column.class);
-
-                return column.columName();
+                return column.getName();
             }
         }
 

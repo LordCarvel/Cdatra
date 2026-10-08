@@ -33,6 +33,16 @@ public class Repository<T> {
 
     public Repository (Class<T> type, Connection connection) {
 
+        if (type == null) {
+
+            throw new IllegalArgumentException("Repository type cannot be null");
+        }
+
+        if (connection == null) {
+
+            throw new IllegalArgumentException("Database connection cannot be null");
+        }
+
         this.type = type;
         this.connection = connection;
     }
@@ -70,7 +80,7 @@ public class Repository<T> {
 
         for (List<Row> record : result) {
 
-            T entity = (T) objectMapper.map(record, type);
+            T entity = type.cast(objectMapper.map(record, type));
             entities.add(entity);
         }
 
@@ -91,7 +101,7 @@ public class Repository<T> {
             return null;
         }
 
-        return (T) objectMapper.map(result.get(0), type);
+        return type.cast(objectMapper.map(result.get(0), type));
     }
 
     public List<T> findBy (String columnName, Object value, Operator operator) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -106,7 +116,7 @@ public class Repository<T> {
 
         for (List<Row> record : result) {
 
-            T entity = (T) objectMapper.map(record, type);
+            T entity = type.cast(objectMapper.map(record, type));
             entities.add(entity);
         }
 
@@ -125,7 +135,7 @@ public class Repository<T> {
 
         for (List<Row> record : result) {
 
-            T entity = (T) objectMapper.map(record, type);
+            T entity = type.cast(objectMapper.map(record, type));
 
             entities.add(entity);
         }
@@ -145,7 +155,7 @@ public class Repository<T> {
 
         for (List<Row> record : result) {
 
-            T entity = (T) objectMapper.map(record, type);
+            T entity = type.cast(objectMapper.map(record, type));
 
             entities.add(entity);
         }
@@ -160,6 +170,14 @@ public class Repository<T> {
         rows.removeIf(row -> row.getColumnName().equalsIgnoreCase(idRow.getColumnName()));
 
         Table table = buildTable();
+
+        if (rows.isEmpty()) {
+
+            sqlGenerator.selectById(table, idRow);
+
+            return;
+        }
+
         String sql = sqlGenerator.update(table, rows, idRow);
 
         sqlExecutor.execute(connection, sql);

@@ -1,12 +1,15 @@
 package org.com.dev.carvel.mapper;
 
 import org.com.dev.carvel.annotations.Column;
+import org.com.dev.carvel.analysis.Analysis;
 import org.com.dev.carvel.row.Row;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ObjectMapper {
@@ -23,6 +26,8 @@ public class ObjectMapper {
             throw new IllegalArgumentException("Mapped type cannot be null");
         }
 
+        List<String> resultColumns = new ArrayList<>();
+
         for (Row row : rows) {
 
             if (row == null) {
@@ -34,8 +39,19 @@ public class ObjectMapper {
 
                 throw new IllegalArgumentException("Mapped column name cannot be null or blank");
             }
+
+            for (String columnName : resultColumns) {
+
+                if (columnName.equalsIgnoreCase(row.getColumnName())) {
+
+                    throw new IllegalArgumentException("Duplicate column in result: " + row.getColumnName());
+                }
+            }
+
+            resultColumns.add(row.getColumnName());
         }
 
+        new Analysis().analize(type);
         Constructor<?> constructor;
 
         try {
@@ -47,14 +63,19 @@ public class ObjectMapper {
         }
 
         Object object = constructor.newInstance();
-        Field[] fields = type.getDeclaredFields();
+        List<Field> fields = new ArrayList<>();
         List<String> mappedColumns = new ArrayList<>();
+
+        for (Class<?> current = type; current != null && current != Object.class; current = current.getSuperclass()) {
+
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+        }
 
         for (Row row : rows) {
 
             for (Field field : fields) {
 
-                if (field.isAnnotationPresent(Column.class)) {
+                if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic() && field.isAnnotationPresent(Column.class)) {
 
                     Column column = field.getAnnotation(Column.class);
 
@@ -74,7 +95,7 @@ public class ObjectMapper {
 
         for (Field field : fields) {
 
-            if (field.isAnnotationPresent(Column.class)) {
+            if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic() && field.isAnnotationPresent(Column.class)) {
 
                 Column column = field.getAnnotation(Column.class);
 

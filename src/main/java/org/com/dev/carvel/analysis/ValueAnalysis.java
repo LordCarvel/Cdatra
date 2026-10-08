@@ -6,7 +6,9 @@ import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.row.Row;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ValueAnalysis {
@@ -20,10 +22,20 @@ public class ValueAnalysis {
 
         new Analysis().analize(value.getClass());
 
-        Field[] fields = value.getClass().getDeclaredFields();
+        List<Field> fields = new ArrayList<>();
         List<Row> rows = new ArrayList<>();
 
+        for (Class<?> current = value.getClass(); current != null && current != Object.class; current = current.getSuperclass()) {
+
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+        }
+
         for (Field field : fields) {
+
+            if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+
+                continue;
+            }
 
             if (field.isAnnotationPresent(Column.class)) {
 
@@ -50,9 +62,20 @@ public class ValueAnalysis {
             throw new IllegalArgumentException("Analyzed value cannot be null");
         }
 
-        Field[] fields = value.getClass().getDeclaredFields();
+        new Analysis().analize(value.getClass());
+        List<Field> fields = new ArrayList<>();
+
+        for (Class<?> current = value.getClass(); current != null && current != Object.class; current = current.getSuperclass()) {
+
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+        }
 
         for (Field field : fields) {
+
+            if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+
+                continue;
+            }
 
             if (field.isAnnotationPresent(Id.class)) {
 
@@ -79,9 +102,20 @@ public class ValueAnalysis {
             throw new IllegalArgumentException("Analyzed value cannot be null");
         }
 
-        Field[] fields = value.getClass().getDeclaredFields();
+        new Analysis().analize(value.getClass());
+        List<Field> fields = new ArrayList<>();
+
+        for (Class<?> current = value.getClass(); current != null && current != Object.class; current = current.getSuperclass()) {
+
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+        }
 
         for (Field field : fields) {
+
+            if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+
+                continue;
+            }
 
             if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class)) {
 

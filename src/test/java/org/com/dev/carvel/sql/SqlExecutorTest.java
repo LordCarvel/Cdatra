@@ -31,6 +31,7 @@ class SqlExecutorTest {
 
         assertThrows(IllegalArgumentException.class, () -> executor.execute(null, "SELECT 1"));
         assertThrows(IllegalArgumentException.class, () -> executor.query(null, "SELECT 1"));
+        assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(null, "SELECT 1"));
     }
 
     @ParameterizedTest
@@ -42,6 +43,7 @@ class SqlExecutorTest {
 
             assertThrows(IllegalArgumentException.class, () -> executor.execute(connection, sql));
             assertThrows(IllegalArgumentException.class, () -> executor.query(connection, sql));
+            assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(connection, sql));
         }
     }
 

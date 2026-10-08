@@ -59,6 +59,8 @@ public class SqlExecutor {
 
     public Object executeAndReturnGeneratedKey (Connection connection, String sql) throws SQLException {
 
+        validate(connection, sql);
+
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.executeUpdate();

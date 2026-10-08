@@ -69,6 +69,11 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Table name cannot be null or blank");
         }
 
+        if (!tableName.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
+
         List<ColumnDefinition> columns = table.getColumnDefinitions();
 
         if (columns == null) {
@@ -82,6 +87,7 @@ public class SqlGenerator {
         }
 
         List<String> seenColumns = new ArrayList<>();
+        int idCount = 0;
 
         for (ColumnDefinition columnDefinition : columns) {
 
@@ -95,6 +101,11 @@ public class SqlGenerator {
             if (columnName == null || columnName.isBlank()) {
 
                 throw new IllegalArgumentException("Column name cannot be null or blank");
+            }
+
+            if (!columnName.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+
+                throw new IllegalArgumentException("Invalid column name: " + columnName);
             }
 
             boolean duplicated = false;
@@ -121,7 +132,22 @@ public class SqlGenerator {
                 throw new IllegalArgumentException("Column type cannot be null");
             }
 
-            typeMapper.map(javaType);
+            SqlType sqlType = typeMapper.map(javaType);
+
+            if (columnDefinition.isId()) {
+
+                idCount++;
+            }
+
+            if (columnDefinition.isGeneratedValue() && (!columnDefinition.isId() || (sqlType != SqlType.INTEGER && sqlType != SqlType.BIGINT))) {
+
+                throw new IllegalArgumentException("Generated column must be an INTEGER or BIGINT ID");
+            }
+        }
+
+        if (idCount > 1) {
+
+            throw new IllegalArgumentException("Table cannot contain more than one ID column");
         }
     }
 
@@ -137,7 +163,14 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Insert rows cannot be null");
         }
 
+        validateTable(table);
+
         if (rows.isEmpty()) {
+
+            if (table.getColumnDefinitions().stream().allMatch(ColumnDefinition::isGeneratedValue)) {
+
+                return "INSERT INTO " + table.getName() + " DEFAULT VALUES;";
+            }
 
             throw new IllegalArgumentException("Insert requires at least one row");
         }
@@ -154,8 +187,6 @@ public class SqlGenerator {
                 throw new IllegalArgumentException("Column name cannot be null or blank");
             }
         }
-
-        validateTable(table);
 
         StringBuilder sql = new StringBuilder();
 
@@ -195,6 +226,11 @@ public class SqlGenerator {
 
                     found = true;
 
+                    if (row.getValue() == null && columnDefinition.isId()) {
+
+                        throw new IllegalArgumentException("ID value cannot be null");
+                    }
+
                     if (row.getValue() != null) {
 
                         SqlType expectedType = typeMapper.map(columnDefinition.getType());
@@ -203,6 +239,11 @@ public class SqlGenerator {
                         if (expectedType != receivedType) {
 
                             throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
+                        }
+
+                        if (row.getValue() instanceof Double && !Double.isFinite((Double) row.getValue())) {
+
+                            throw new IllegalArgumentException("Non-finite value for column: " + row.getColumnName());
                         }
                     }
                 }
@@ -283,6 +324,8 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Table name cannot be null or blank");
         }
 
+        validateTable(table);
+
         return "SELECT * FROM " + table.getName() + ";";
     }
 
@@ -308,47 +351,9 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Select ID value cannot be null");
         }
 
-        boolean idFound = false;
+        String condition = buildCondition(table, idRow, Operator.EQUAL);
 
-        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
-
-            if (idRow.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
-
-                idFound = true;
-            }
-        }
-
-        if (!idFound) {
-
-            throw new IllegalArgumentException("ID column not found in table: " + idRow.getColumnName());
-        }
-
-        StringBuilder sql = new StringBuilder();
-
-        sql.append("SELECT * FROM ");
-        sql.append(table.getName());
-        sql.append(" WHERE ");
-        sql.append(idRow.getColumnName());
-        sql.append(" = ");
-
-        Object idValue = idRow.getValue();
-        SqlType idType = typeMapper.map(idValue.getClass());
-
-        if (idType == SqlType.VARCHAR) {
-
-            String stringValue = idValue.toString().replace("'", "''");
-
-            sql.append("'");
-            sql.append(stringValue);
-            sql.append("'");
-        } else {
-
-            sql.append(idValue);
-        }
-
-        sql.append(";");
-
-        return sql.toString();
+        return "SELECT * FROM " + table.getName() + " WHERE " + condition + ";";
     }
 
     public String update (Table table, List<Row> rows, Row idRow) {
@@ -378,91 +383,70 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Update ID column name cannot be null or blank");
         }
 
-        boolean idFound = false;
+        if (idRow.getValue() == null) {
 
-        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
-
-            if (idRow.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
-
-                idFound = true;
-            }
+            throw new IllegalArgumentException("Update ID value cannot be null");
         }
 
-        if (!idFound) {
-
-            throw new IllegalArgumentException("ID column not found in table: " + idRow.getColumnName());
-        }
-
-        for (Row row : rows) {
-
-            if (row.getColumnName().equalsIgnoreCase(idRow.getColumnName())) {
-
-                throw new IllegalArgumentException("ID column cannot be updated: " + row.getColumnName());
-            }
-        }
-
+        String idCondition = buildCondition(table, idRow, Operator.EQUAL);
+        List<String> seenColumns = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
 
         sql.append("UPDATE ");
         sql.append(table.getName());
         sql.append(" SET ");
 
-        for (int i = 0; i < rows.size();) {
+        for (int i = 0; i < rows.size(); i++) {
 
             Row row = rows.get(i);
 
-            sql.append(row.getColumnName());
-            sql.append(" = ");
+            if (row == null) {
 
-            Object value = row.getValue();
+                throw new IllegalArgumentException("Update row cannot be null");
+            }
 
-            if (value == null) {
+            String assignment = buildCondition(table, row, Operator.EQUAL);
 
-                sql.append("NULL");
+            if (row.getColumnName().equalsIgnoreCase(idRow.getColumnName())) {
+
+                throw new IllegalArgumentException("ID column cannot be updated: " + row.getColumnName());
+            }
+
+            for (ColumnDefinition column : table.getColumnDefinitions()) {
+
+                if (column.isId() && row.getColumnName().equalsIgnoreCase(column.getName())) {
+
+                    throw new IllegalArgumentException("ID column cannot be updated: " + row.getColumnName());
+                }
+            }
+
+            for (String seenColumn : seenColumns) {
+
+                if (row.getColumnName().equalsIgnoreCase(seenColumn)) {
+
+                    throw new IllegalArgumentException("Duplicate column in update: " + row.getColumnName());
+                }
+            }
+
+            seenColumns.add(row.getColumnName());
+
+            if (row.getValue() == null) {
+
+                sql.append(row.getColumnName());
+                sql.append(" = NULL");
             } else {
 
-                SqlType sqlType = typeMapper.map(value.getClass());
-
-                if (sqlType == SqlType.VARCHAR) {
-
-                    String stringValue = value.toString().replace("'", "''");
-
-                    sql.append("'");
-                    sql.append(stringValue);
-                    sql.append("'");
-                } else {
-
-                    sql.append(value);
-                }
+                sql.append(assignment);
             }
 
             if (i < rows.size() - 1) {
 
                 sql.append(", ");
             }
-
-            i = i + 1;
         }
 
         sql.append(" WHERE ");
-        sql.append(idRow.getColumnName());
-        sql.append(" = ");
-
-        Object idValue = idRow.getValue();
-        SqlType idType = typeMapper.map(idValue.getClass());
-
-        if (idType == SqlType.VARCHAR) {
-
-            String stringValue = idValue.toString().replace("'", "'");
-
-            sql.append("'");
-            sql.append(stringValue);
-            sql.append("'");
-        } else {
-
-            sql.append(idValue);
-        }
-
+        sql.append(idCondition);
         sql.append(";");
 
         return sql.toString();
@@ -485,32 +469,9 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Delete ID value cannot be null");
         }
 
-        StringBuilder sql = new StringBuilder();
+        String condition = buildCondition(table, idRow, Operator.EQUAL);
 
-        sql.append("DELETE FROM ");
-        sql.append(table.getName());
-        sql.append(" WHERE ");
-        sql.append(idRow.getColumnName());
-        sql.append(" = ");
-
-        Object idValue = idRow.getValue();
-        SqlType idType = typeMapper.map(idValue.getClass());
-
-        if (idType == SqlType.VARCHAR) {
-
-            String stringValue = idValue.toString().replace("'", "''");
-
-            sql.append("'");
-            sql.append(stringValue);
-            sql.append("'");
-        } else {
-
-            sql.append(idValue);
-        }
-
-        sql.append(";");
-
-        return sql.toString();
+        return "DELETE FROM " + table.getName() + " WHERE " + condition + ";";
     }
 
     public String selectBy (Table table, Row row, Operator operator) {
@@ -544,6 +505,8 @@ public class SqlGenerator {
 
             throw new IllegalArgumentException("Select requires at least one condition");
         }
+
+        validateTable(table);
 
         StringBuilder sql = new StringBuilder();
 
@@ -594,6 +557,8 @@ public class SqlGenerator {
 
             throw new IllegalArgumentException("Select requires at least one filter");
         }
+
+        validateTable(table);
 
         StringBuilder sql = new StringBuilder();
 
@@ -670,13 +635,16 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Select operator cannot be null");
         }
 
+        validateTable(table);
         boolean columnFound = false;
+        SqlType columnType = null;
 
         for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
 
             if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
 
                 columnFound = true;
+                columnType = typeMapper.map(columnDefinition.getType());
             }
         }
 
@@ -743,6 +711,16 @@ public class SqlGenerator {
             condition.append(" ");
 
             SqlType sqlType = typeMapper.map(value.getClass());
+
+            if (sqlType != columnType) {
+
+                throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
+            }
+
+            if (value instanceof Double && !Double.isFinite((Double) value)) {
+
+                throw new IllegalArgumentException("Non-finite value for column: " + row.getColumnName());
+            }
 
             if (sqlType == SqlType.VARCHAR) {
 
