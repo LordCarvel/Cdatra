@@ -5,6 +5,7 @@ import org.com.dev.carvel.analysis.ValueAnalysis;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.mapper.ObjectMapper;
 import org.com.dev.carvel.query.Operator;
+import org.com.dev.carvel.query.QueryCondition;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
 import org.com.dev.carvel.sql.SqlExecutor;
@@ -105,6 +106,26 @@ public class Repository<T> {
         for (List<Row> record : result) {
 
             T entity = (T) objectMapper.map(record, type);
+            entities.add(entity);
+        }
+
+        return entities;
+    }
+
+    public List<T> findByConditions (List<QueryCondition> conditions) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
+        Table table = buildTable();
+
+        String sql = sqlGenerator.selectByConditions(table, conditions);
+
+        List<List<Row>> result = sqlExecutor.query(connection, sql);
+
+        List<T> entities = new ArrayList<>();
+
+        for (List<Row> record : result) {
+
+            T entity = (T) objectMapper.map(record, type);
+
             entities.add(entity);
         }
 
