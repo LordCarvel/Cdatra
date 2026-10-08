@@ -106,6 +106,23 @@ public class Main {
             );
         }
 
+        repository.delete(user2);
+
+        List<User> usersAfterDelete = repository.findAll();
+
+        System.out.println("After delete:");
+
+        for (User user : usersAfterDelete) {
+
+            System.out.println(
+                    user.getId()
+                            + " | "
+                            + user.getName()
+                            + " | "
+                            + user.getEmail()
+            );
+        }
+
         connection.close();
     }
 }

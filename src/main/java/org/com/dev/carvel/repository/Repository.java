@@ -94,4 +94,16 @@ public class Repository<T> {
 
         sqlExecutor.execute(connection, sql);
     }
+
+    public void delete (T entity) throws IllegalAccessException, SQLException {
+        Row idRow = valueAnalysis.analyzeId(entity);
+
+        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
+        String tableName = analysis.analyzeTableName(type);
+        Table table = schemaBuilder.build(tableName, columnDefinitions);
+
+        String sql = sqlGenerator.delete(table, idRow);
+
+        sqlExecutor.execute(connection, sql);
+    }
 }
