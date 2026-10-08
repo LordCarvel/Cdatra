@@ -54,7 +54,9 @@ public class Analysis {
                     }
                 }
 
-                columns.add(new ColumnDefinition(column.columName(), field.getType()));
+                boolean isId = field.isAnnotationPresent(Id.class);
+
+                columns.add(new ColumnDefinition(column.columName(), field.getType(), isId));
             }
         }
 

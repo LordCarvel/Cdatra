@@ -12,20 +12,38 @@ public class SqlGenerator {
     private final TypeMapper typeMapper = new TypeMapper();
 
     public String createTable(Table table) {
+
         validateTable(table);
+
         StringBuilder sql = new StringBuilder();
+
         sql.append("CREATE TABLE ");
         sql.append(table.getName());
         sql.append(" (");
+
         List<ColumnDefinition> columns = table.getColumnDefinitions();
+
         for (int i = 0; i < columns.size(); i++) {
+
             ColumnDefinition column = columns.get(i);
-            sql.append(column.getName()).append(" ").append(typeMapper.map(column.getType()));
+
+            String columnSql = column.getName() + " " + typeMapper.map(column.getType());
+
+            if (column.isId()) {
+
+                columnSql = columnSql + " PRIMARY KEY";
+            }
+
+            sql.append(columnSql);
+
             if (i < columns.size() - 1) {
+
                 sql.append(", ");
             }
         }
+
         sql.append(");");
+
         return sql.toString();
     }
 
