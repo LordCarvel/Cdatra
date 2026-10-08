@@ -86,4 +86,28 @@ public class ValueAnalysis {
                 "Entity does not contain an @Id field"
         );
     }
+
+    public void setGeneratedValue (Object value, Object generatedValue) throws IllegalAccessException {
+
+        if (value == null) {
+
+            throw new IllegalArgumentException(
+                    "Analyzed value cannot be null"
+            );
+        }
+
+        Field[] fields = value.getClass().getDeclaredFields();
+
+        for (Field field : fields) {
+
+            if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class)) {
+
+                field.setAccessible(true);
+
+                field.set(value, generatedValue);
+
+                return;
+            }
+        }
+    }
 }

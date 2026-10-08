@@ -5,7 +5,6 @@ import org.com.dev.carvel.user.User;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.List;
 
 public class Main {
 
@@ -24,7 +23,7 @@ public class Main {
 
         repository.createTable();
 
-        User user1 =
+        User user =
                 new User(
                         0,
                         "Carvel",
@@ -33,29 +32,30 @@ public class Main {
                         null
                 );
 
-        User user2 =
-                new User(
-                        0,
-                        "Joao",
-                        "joao@gmail.com",
-                        null,
-                        null
+        System.out.println(
+                "ID before save: " + user.getId()
+        );
+
+        repository.save(user);
+
+        System.out.println(
+                "ID after save: " + user.getId()
+        );
+
+        User userFromDatabase =
+                repository.findById(
+                        user.getId()
                 );
 
-        repository.save(user1);
-        repository.save(user2);
+        System.out.println(
+                "Database user:"
+        );
 
-        List<User> users =
-                repository.findAll();
-
-        for (User user : users) {
-
-            System.out.println(
-                    "ID: " + user.getId()
-                            + " | Name: " + user.getName()
-                            + " | Email: " + user.getEmail()
-            );
-        }
+        System.out.println(
+                "ID: " + userFromDatabase.getId()
+                        + " | Name: " + userFromDatabase.getName()
+                        + " | Email: " + userFromDatabase.getEmail()
+        );
 
         connection.close();
     }

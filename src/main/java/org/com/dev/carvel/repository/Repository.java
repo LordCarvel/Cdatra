@@ -50,7 +50,12 @@ public class Repository<T> {
 
         String sql = sqlGenerator.insert(table, rows);
 
-        sqlExecutor.execute(connection, sql);
+        Object generatedValue = sqlExecutor.executeAndReturnGeneratedKey(connection, sql);
+
+        if (generatedValue != null) {
+
+            valueAnalysis.setGeneratedValue(entity, generatedValue);
+        }
     }
 
     public List<T> findAll () throws Exception {

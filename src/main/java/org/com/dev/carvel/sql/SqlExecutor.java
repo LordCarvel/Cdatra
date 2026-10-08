@@ -2,11 +2,7 @@ package org.com.dev.carvel.sql;
 
 import org.com.dev.carvel.row.Row;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,5 +43,23 @@ public class SqlExecutor {
         if (sql == null || sql.isBlank()) {
             throw new IllegalArgumentException("SQL cannot be null or blank");
         }
+    }
+
+    public Object executeAndReturnGeneratedKey(Connection connection, String sql) throws SQLException {
+
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.executeUpdate();
+
+            try (ResultSet resultSet = statement.getGeneratedKeys()) {
+
+                if (resultSet.next()) {
+
+                    return resultSet.getObject(1);
+                }
+            }
+        }
+
+        return null;
     }
 }
