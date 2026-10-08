@@ -29,34 +29,34 @@ class SqlGeneratorTest {
     static Stream<Table> invalidTables () {
 
         var builder = new SchemaBuilder();
-        var columns = List.of(new ColumnDefinition("id", int.class));
+        var columns = List.of(new ColumnDefinition("id", int.class, false, false));
 
         return Stream.of(null, builder.build(null, columns), builder.build(" ", columns),
                 builder.build("people", null), builder.build("people", List.of()),
                 builder.build("people", Arrays.asList((ColumnDefinition) null)),
-                builder.build("people", List.of(new ColumnDefinition(null, int.class))),
-                builder.build("people", List.of(new ColumnDefinition(" ", int.class))),
-                builder.build("people", List.of(new ColumnDefinition("id", null))),
-                builder.build("people", List.of(new ColumnDefinition("id", Object.class))),
-                builder.build("people", List.of(new ColumnDefinition("id", int.class), new ColumnDefinition("ID", int.class))));
+                builder.build("people", List.of(new ColumnDefinition(null, int.class, false, false))),
+                builder.build("people", List.of(new ColumnDefinition(" ", int.class, false, false))),
+                builder.build("people", List.of(new ColumnDefinition("id", null, false, false))),
+                builder.build("people", List.of(new ColumnDefinition("id", Object.class, false, false))),
+                builder.build("people", List.of(new ColumnDefinition("id", int.class, false, false), new ColumnDefinition("ID", int.class, false, false))));
     }
 
     @Test
     void buildsCreateTableForSupportedTypes () {
 
-        var table = new Table("people", List.of(new ColumnDefinition("id", int.class),
-                new ColumnDefinition("name", String.class), new ColumnDefinition("total", Long.class),
-                new ColumnDefinition("active", boolean.class), new ColumnDefinition("score", Double.class)));
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false),
+                new ColumnDefinition("name", String.class, false, false), new ColumnDefinition("total", Long.class, false, false),
+                new ColumnDefinition("active", boolean.class, false, false), new ColumnDefinition("score", Double.class, false, false)));
         assertEquals("CREATE TABLE people (id INTEGER, name VARCHAR, total BIGINT, active BOOLEAN, score DOUBLE);", generator.createTable(table));
     }
 
     @Test
     void insertsEscapedTextNullAndSupportedValues () {
 
-        var table = new Table("people", List.of(new ColumnDefinition("id", int.class),
-                new ColumnDefinition("name", String.class), new ColumnDefinition("optional", String.class),
-                new ColumnDefinition("total", long.class), new ColumnDefinition("active", boolean.class),
-                new ColumnDefinition("score", double.class)));
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false),
+                new ColumnDefinition("name", String.class, false, false), new ColumnDefinition("optional", String.class, false, false),
+                new ColumnDefinition("total", long.class, false, false), new ColumnDefinition("active", boolean.class, false, false),
+                new ColumnDefinition("score", double.class, false, false)));
         assertEquals("INSERT INTO people (id, name, optional, total, active, score) VALUES (1, 'D''Ávila', NULL, 5, true, 1.5);",
                 generator.insert(table, List.of(new Row("id", 1), new Row("name", "D'Ávila"),
                         new Row("optional", null), new Row("total", 5L), new Row("active", true), new Row("score", 1.5))));
@@ -66,7 +66,7 @@ class SqlGeneratorTest {
     @MethodSource("invalidRows")
     void rejectsInvalidInsertRows (List<Row> rows) {
 
-        var table = new Table("people", List.of(new ColumnDefinition("id", int.class)));
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false)));
         assertThrows(IllegalArgumentException.class, () -> generator.insert(table, rows));
     }
 
