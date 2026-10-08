@@ -4,6 +4,7 @@ import org.com.dev.carvel.analysis.Analysis;
 import org.com.dev.carvel.analysis.ValueAnalysis;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 import org.com.dev.carvel.mapper.ObjectMapper;
+import org.com.dev.carvel.query.Operator;
 import org.com.dev.carvel.row.Row;
 import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
 import org.com.dev.carvel.sql.SqlExecutor;
@@ -98,13 +99,13 @@ public class Repository<T> {
         return (T) objectMapper.map(result.get(0), type);
     }
 
-    public List<T> findBy (String columnName, Object value) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public List<T> findBy (String columnName, Object value, Operator operator) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
 
         Row row = new Row(columnName, value);
 
-        String sql = sqlGenerator.selectBy(table, row);
+        String sql = sqlGenerator.selectBy(table, row, operator);
 
         List<List<Row>> result = sqlExecutor.query(connection, sql);
 
