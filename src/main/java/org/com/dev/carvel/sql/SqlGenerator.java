@@ -281,4 +281,129 @@ public class SqlGenerator {
 
         return "SELECT * FROM " + table.getName() + ";";
     }
+
+    public String update (Table table, List<Row> rows, Row idRow) {
+
+        if (table == null) {
+            throw new IllegalArgumentException(
+                    "Update table cannot be null"
+            );
+        }
+
+        if (rows == null) {
+            throw new IllegalArgumentException(
+                    "Update rows cannot be null"
+            );
+        }
+
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Update requires at least one row"
+            );
+        }
+
+        if (idRow == null) {
+            throw new IllegalArgumentException(
+                    "Update ID row cannot be null"
+            );
+        }
+
+        if (idRow.getColumnName() == null || idRow.getColumnName().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Update ID column name cannot be null or blank"
+            );
+        }
+
+        boolean idFound = false;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (idRow.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                idFound = true;
+            }
+        }
+
+        if (!idFound) {
+            throw new IllegalArgumentException(
+                    "ID column not found in table: " + idRow.getColumnName()
+            );
+        }
+
+        for (Row row : rows) {
+
+            if (row.getColumnName().equalsIgnoreCase(idRow.getColumnName())) {
+                throw new IllegalArgumentException(
+                        "ID column cannot be updated: " + row.getColumnName()
+                );
+            }
+        }
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("UPDATE ");
+        sql.append(table.getName());
+        sql.append(" SET ");
+
+        for (int i = 0; i < rows.size(); ) {
+
+            Row row = rows.get(i);
+
+            sql.append(row.getColumnName());
+            sql.append(" = ");
+
+            Object value = row.getValue();
+
+            if (value == null) {
+
+                sql.append("NULL");
+            } else {
+
+                SqlType sqlType = typeMapper.map(value.getClass());
+
+                if (sqlType == SqlType.VARCHAR) {
+
+                    String stringValue = value.toString().replace("'", "''");
+
+                    sql.append("'");
+                    sql.append(stringValue);
+                    sql.append("'");
+                } else {
+
+                    sql.append(value);
+                }
+            }
+
+            if (i < rows.size() - 1) {
+
+                sql.append(", ");
+            }
+
+            i = i + 1;
+        }
+
+        sql.append(" WHERE ");
+        sql.append(idRow.getColumnName());
+        sql.append(" = ");
+
+        Object idValue = idRow.getValue();
+
+        SqlType idType = typeMapper.map(idValue.getClass());
+
+        if (idType == SqlType.VARCHAR) {
+
+            String stringValue = idValue.toString().replace("'", "'");
+
+            sql.append("'");
+            sql.append(stringValue);
+            sql.append("'");
+        } else {
+
+            sql.append(idValue);
+        }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
 }

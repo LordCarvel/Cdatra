@@ -13,6 +13,7 @@ import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
@@ -86,42 +87,70 @@ public class Main {
                         "temporary2"
                 );
 
-        // 8. Extrai os valores do primeiro usuário
         ValueAnalysis valueAnalysis =
                 new ValueAnalysis();
 
         List<Row> user1Rows =
                 valueAnalysis.analyze(user1);
 
-        String user1InsertSql =
-                sqlGenerator.insert(
-                        table,
-                        user1Rows
-                );
-
-        sqlExecutor.execute(
-                connection,
-                user1InsertSql
-        );
-
         List<Row> user2Rows =
                 valueAnalysis.analyze(user2);
 
-        String user2InsertSql =
+        sqlExecutor.execute(
+                connection,
                 sqlGenerator.insert(
                         table,
-                        user2Rows
-                );
+                        user1Rows
+                )
+        );
 
         sqlExecutor.execute(
                 connection,
-                user2InsertSql
+                sqlGenerator.insert(
+                        table,
+                        user2Rows
+                )
+        );
+
+        List<Row> updateRows =
+                new ArrayList<>();
+
+        updateRows.add(
+                new Row(
+                        "name",
+                        "Carvel Novo"
+                )
+        );
+
+        updateRows.add(
+                new Row(
+                        "user_email",
+                        "novo@gmail.com"
+                )
+        );
+
+        Row idRow =
+                new Row(
+                        "id",
+                        1
+                );
+
+        String updateSql =
+                sqlGenerator.update(
+                        table,
+                        updateRows,
+                        idRow
+                );
+
+        System.out.println(updateSql);
+
+        sqlExecutor.execute(
+                connection,
+                updateSql
         );
 
         String selectSql =
                 sqlGenerator.selectAll(table);
-
-        System.out.println(selectSql);
 
         List<List<Row>> result =
                 sqlExecutor.query(
@@ -140,13 +169,12 @@ public class Main {
                             User.class
                     );
 
-            Row idRow =
-                    valueAnalysis.analyzeId(loadedUser);
-
             System.out.println(
-                    idRow.getColumnName()
-                            + " = "
-                            + idRow.getValue()
+                    loadedUser.getId()
+                            + " | "
+                            + loadedUser.getName()
+                            + " | "
+                            + loadedUser.getEmail()
             );
         }
 
