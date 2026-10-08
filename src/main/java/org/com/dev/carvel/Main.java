@@ -1,20 +1,10 @@
 package org.com.dev.carvel;
 
 import org.com.dev.carvel.address.Address;
-import org.com.dev.carvel.analysis.Analysis;
-import org.com.dev.carvel.analysis.ValueAnalysis;
-import org.com.dev.carvel.columnDefinition.ColumnDefinition;
-import org.com.dev.carvel.mapper.ObjectMapper;
 import org.com.dev.carvel.repository.Repository;
-import org.com.dev.carvel.row.Row;
-import org.com.dev.carvel.schemaBuilder.SchemaBuilder;
-import org.com.dev.carvel.sql.SqlExecutor;
-import org.com.dev.carvel.sql.SqlGenerator;
-import org.com.dev.carvel.table.Table;
 import org.com.dev.carvel.user.User;
 
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
@@ -30,6 +20,14 @@ public class Main {
                         "sa",
                         ""
                 );
+
+        Repository<User> repository =
+                new Repository<>(
+                        User.class,
+                        connection
+                );
+
+        repository.createTable();
 
         User user1 =
                 new User(
@@ -57,18 +55,15 @@ public class Main {
                         "temporary2"
                 );
 
-        Repository<User> repository =
-                new Repository<>(User.class, connection);
-
-        repository.createTable();
-
         repository.save(user1);
         repository.save(user2);
 
-        List<User> users =
+        System.out.println("Before update:");
+
+        List<User> usersBeforeUpdate =
                 repository.findAll();
 
-        for (User user : users) {
+        for (User user : usersBeforeUpdate) {
 
             System.out.println(
                     user.getId()
@@ -78,5 +73,39 @@ public class Main {
                             + user.getEmail()
             );
         }
+
+        User updatedUser =
+                new User(
+                        1,
+                        "João Atualizado",
+                        "joao.novo@gmail.com",
+                        new Address(
+                                "Updated street",
+                                50,
+                                "Updated city"
+                        ),
+                        "temporary updated"
+                );
+
+        repository.update(updatedUser);
+
+        System.out.println();
+        System.out.println("After update:");
+
+        List<User> usersAfterUpdate =
+                repository.findAll();
+
+        for (User user : usersAfterUpdate) {
+
+            System.out.println(
+                    user.getId()
+                            + " | "
+                            + user.getName()
+                            + " | "
+                            + user.getEmail()
+            );
+        }
+
+        connection.close();
     }
 }

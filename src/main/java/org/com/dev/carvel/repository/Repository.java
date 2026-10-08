@@ -35,9 +35,7 @@ public class Repository<T> {
     public void createTable () throws SQLException {
 
         List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-
         String tableName = analysis.analyzeTableName(type);
-
         Table table = schemaBuilder.build(tableName, columnDefinitions);
 
         String sql = sqlGenerator.createTable(table);
@@ -50,9 +48,7 @@ public class Repository<T> {
         List<Row> rows = valueAnalysis.analyze(entity);
 
         List<ColumnDefinition> columnDefinitions = analysis.analize(type);
-
         String tableName = analysis.analyzeTableName(type);
-
         Table table = schemaBuilder.build(tableName, columnDefinitions);
 
         String sql = sqlGenerator.insert(table, rows);
@@ -82,5 +78,20 @@ public class Repository<T> {
         }
 
         return entities;
+    }
+
+    public void update (T entity) throws IllegalAccessException, SQLException {
+
+        List<Row> rows = valueAnalysis.analyze(entity);
+        Row idRow = valueAnalysis.analyzeId(entity);
+        rows.removeIf(row -> row.getColumnName().equalsIgnoreCase(idRow.getColumnName()));
+
+        List<ColumnDefinition> columnDefinitions = analysis.analize(type);
+        String tableName = analysis.analyzeTableName(type);
+        Table table = schemaBuilder.build(tableName, columnDefinitions);
+
+        String sql = sqlGenerator.update(table, rows, idRow);
+
+        sqlExecutor.execute(connection, sql);
     }
 }
