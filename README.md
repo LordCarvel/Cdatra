@@ -1,129 +1,440 @@
 # Cdatra
 
-Projeto de aprendizado em Java 17 para reduzir o trabalho repetitivo com JDBC.
-Repository coordena análise de entidades, geração de SQL, execução JDBC e
-mapeamento de resultados para objetos.
+## O que é
 
-Hoje há criação de tabela, INSERT com retorno de chave gerada, buscas, UPDATE e
-DELETE. As entidades usam `@Entity`, `@Column`, `@Id` e `@GeneratedValue`. Os nomes
-atuais da API foram preservados: `analize`, `columName` e `tableNaame`.
+Cdatra é uma biblioteca de aprendizado em Java para reduzir o trabalho repetitivo
+com JDBC. A partir de uma classe anotada, cria tabelas, salva registros, faz
+consultas, atualiza e exclui dados usando `Repository<T>`.
 
-## Organização dos packages
+Uma entidade começa assim:
 
-O código de produção usa a raiz `io.github.lordcarvel.cdatra`, dividido por
-responsabilidade:
+```java
+@Entity(tableNaame = "users")
+public class User {
 
-| Package | Classes |
+    @Id
+    @GeneratedValue
+    @Column(columName = "id")
+    private int id;
+
+    @Column(columName = "name")
+    private String name;
+}
+```
+
+E o uso básico é:
+
+```java
+Repository<User> repository = new Repository<>(User.class, connection);
+
+repository.createTable();
+
+repository.save(user);
+
+List<User> users = repository.findAll();
+```
+
+Esse resumo pressupõe uma conexão JDBC aberta e um objeto `user`. Os exemplos
+abaixo mostram os imports, a entidade completa e a abertura da conexão.
+
+## Requisitos
+
+- JDK 17.
+- Maven para compilar, instalar e executar os testes.
+- Uma conexão JDBC e o driver do banco no classpath da aplicação.
+
+O ambiente validado usa Java 17, Maven 3.9.14 e **H2 2.5.250 em memória**.
+H2 é o banco atualmente testado para a v0.0.1. O projeto inclui esse driver como
+dependência de runtime e usa JUnit 5.11.4 nos testes.
+
+## Instalação
+
+Para instalar a biblioteca no repositório Maven local:
+
+```shell
+git clone https://github.com/LordCarvel/Cdatra.git
+cd Cdatra
+mvn clean install
+```
+
+Depois, adicione esta dependência ao `pom.xml` da sua aplicação:
+
+```xml
+<dependency>
+    <groupId>org.com.dev.carvel</groupId>
+    <artifactId>Cdatra</artifactId>
+    <version>0.0.1</version>
+</dependency>
+```
+
+Essas são as coordenadas Maven atuais. Os packages Java usam a raiz
+`io.github.lordcarvel.cdatra`. A instalação descrita usa o build local; não
+pressupõe publicação no Maven Central.
+
+O build gera `target/Cdatra-0.0.1.jar`. Esse JAR não contém suas dependências;
+num projeto Maven, o driver H2 é resolvido pela dependência de runtime.
+
+## Primeira entidade
+
+Crie `User.java` na sua aplicação. Este exemplo adiciona apenas os construtores
+e acessores usados nas próximas seções:
+
+```java
+package example;
+
+import io.github.lordcarvel.cdatra.annotation.Column;
+import io.github.lordcarvel.cdatra.annotation.Entity;
+import io.github.lordcarvel.cdatra.annotation.GeneratedValue;
+import io.github.lordcarvel.cdatra.annotation.Id;
+
+@Entity(tableNaame = "users")
+public class User {
+
+    @Id
+    @GeneratedValue
+    @Column(columName = "id")
+    private int id;
+
+    @Column(columName = "name")
+    private String name;
+
+    public User () {
+
+    }
+
+    public User (String name) {
+
+        this.name = name;
+    }
+
+    public int getId () {
+
+        return id;
+    }
+
+    public String getName () {
+
+        return name;
+    }
+
+    public void setName (String name) {
+
+        this.name = name;
+    }
+}
+```
+
+Para carregar resultados, a classe precisa de um construtor sem argumentos
+acessível. Os campos anotados podem ser privados: o mapeamento usa reflexão.
+Campos sem `@Column` são ignorados.
+
+Os atributos se chamam **`tableNaame`** e **`columName`** na API atual. Use essa
+grafia nos exemplos da v0.0.1.
+
+## Criando Repository
+
+O Repository recebe a classe da entidade e uma `java.sql.Connection` aberta.
+Este `Main.java`, no mesmo package da entidade acima, executa o ciclo básico:
+
+```java
+package example;
+
+import io.github.lordcarvel.cdatra.repository.Repository;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.List;
+
+public class Main {
+
+    public static void main (String[] args) throws Exception {
+
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:cdatra_example", "sa", "")) {
+
+            Repository<User> repository = new Repository<>(User.class, connection);
+            repository.createTable();
+
+            User user = new User("Carvel");
+            repository.save(user);
+
+            List<User> users = repository.findAll();
+
+            for (User saved : users) {
+
+                System.out.println(saved.getId() + " | " + saved.getName());
+            }
+        }
+    }
+}
+```
+
+O banco desse exemplo existe em memória enquanto a conexão estiver aberta.
+Quem fornece a conexão é responsável por fechá-la. As operações podem lançar
+exceções JDBC e de reflexão; o exemplo usa `throws Exception` para manter o foco
+no fluxo básico.
+
+As próximas seções mostram trechos de uso dentro de uma conexão aberta. São
+exemplos separados; não é necessário criar a mesma tabela novamente depois de
+executar o ciclo acima.
+
+## Criando tabela
+
+```java
+repository.createTable();
+```
+
+Usa o nome de `@Entity` e as colunas de `@Column`. O campo com `@Id` vira a chave
+primária; com `@GeneratedValue`, o banco gera seu valor.
+
+A chamada executa `CREATE TABLE`, sem `IF NOT EXISTS`. Se a tabela já existe, o
+banco pode retornar erro. Não há atualização automática de uma tabela existente.
+
+## Salvando
+
+```java
+User user = new User("Carvel");
+repository.save(user);
+
+int generatedId = user.getId();
+```
+
+`save` executa um INSERT. O ID gerado pelo banco é atribuído ao próprio objeto;
+o valor inicial desse campo não é enviado no INSERT. IDs manuais também são
+aceitos quando o campo tem `@Id` e não tem `@GeneratedValue`.
+
+`save` não escolhe automaticamente entre INSERT e UPDATE. Para alterar um
+registro existente, use `update`.
+
+## Consultando
+
+```java
+List<User> users = repository.findAll();
+
+User userById = repository.findById(user.getId());
+
+List<User> matches = repository.findBy("name", "Carvel", Operator.EQUAL);
+```
+
+Para a última consulta, importe:
+
+```java
+import io.github.lordcarvel.cdatra.query.Operator;
+```
+
+`findById` retorna `null` quando o registro não existe. As buscas que retornam
+listas devolvem uma lista vazia quando não há resultados. Sem ORDER BY, a ordem
+dos resultados não é garantida.
+
+O nome passado a `findBy` é o nome da coluna declarado em `@Column`.
+
+## Atualizando
+
+```java
+user.setName("Carvel atualizado");
+repository.update(user);
+```
+
+O UPDATE usa o ID do objeto para localizar o registro e atualiza os demais
+campos anotados. O ID não é alterado. Valores nulos em campos objeto também são
+enviados, podendo substituir valores existentes por NULL.
+
+Não há acompanhamento automático de mudanças. Alterar o objeto só afeta o banco
+quando `update` é chamado. A operação retorna `void`, sem informar a quantidade
+de registros afetados.
+
+## Excluindo
+
+```java
+repository.delete(user);
+```
+
+O DELETE usa o ID do objeto. `findById`, `update` e `delete` exigem uma entidade
+com `@Id`. A operação retorna `void`; excluir um ID inexistente não gera um
+resultado indicando se algum registro foi removido.
+
+## Consultas com operadores
+
+Importe `io.github.lordcarvel.cdatra.query.Operator`. A v0.0.1 suporta:
+
+| Operador | Comparação SQL |
 | --- | --- |
-| `annotation` | Column, Entity, Id, GeneratedValue |
-| `metadata` | Analysis, ColumnDefinition, Table, SchemaBuilder |
-| `mapping` | ValueAnalysis, ObjectMapper, Row, Container |
-| `query` | Operator, LogicalOperator, QueryCondition, QueryFilter |
-| `sql` | SqlGenerator, SqlType, TypeMapper |
-| `jdbc` | DatabaseConnection, SqlExecutor |
-| `repository` | Repository |
+| `Operator.EQUAL` | `=` |
+| `Operator.NOT_EQUAL` | `!=` |
+| `Operator.GREATER_THAN` | `>` |
+| `Operator.LESS_THAN` | `<` |
+| `Operator.GREATER_THAN_OR_EQUAL` | `>=` |
+| `Operator.LESS_THAN_OR_EQUAL` | `<=` |
 
-Main, User e Address ficam em `src/test/java/io/github/lordcarvel/cdatra/example/`
-e continuam sendo usados pelos testes. Esses exemplos não fazem parte do JAR.
-A classe vazia Schema foi removida.
+Exemplo:
 
-A reorganização preserva os corpos dos métodos e os testes existentes. Código
-que usava os packages anteriores precisa atualizar seus imports. As coordenadas
-Maven permanecem definidas no `pom.xml`, sem alteração nesta reorganização.
+```java
+List<User> users = repository.findBy(
+        "id",
+        10,
+        Operator.GREATER_THAN
+);
+```
 
-## Avaliação da v0.0.1
+Representa a condição:
 
-A validação final de 08/10/2026 possui **224 casos distintos**, todos passando:
+```sql
+id > 10
+```
 
-- Zero falhas, zero erros e zero testes ignorados na suíte padrão e na auditoria.
-- Os 25 casos que antes falhavam foram corrigidos e integrados à execução padrão.
-- Cobertura na revisão das correções: **96,88% das linhas** e **94,22% das decisões**.
+Nulos podem ser consultados com `EQUAL` e `NOT_EQUAL`, que geram `IS NULL` e
+`IS NOT NULL`:
 
-Foram corrigidos o escape da chave textual no UPDATE, a validação do DELETE,
-labels duplicados no mapper, herança de campos, campos static, entidades com
-apenas ID gerado e validações de tipos, nomes e valores não finitos. As assinaturas
-existentes foram preservadas, sem criar métodos de produção.
+```java
+List<User> withoutName = repository.findBy("name", null, Operator.EQUAL);
+```
 
-O [relatório das correções](docs/testing/v0.0.1-fixes.md) apresenta o resultado
-atual e seus limites. As [evidências finais](docs/testing/v0.0.1-fixed-results.json)
-registram os casos e a cobertura. O
-[relatório anterior](docs/testing/v0.0.1-report.md) e seu
-[inventário](docs/testing/v0.0.1-results.json) permanecem como histórico.
+Comparações de ordem com null são rejeitadas. O valor precisa ter um tipo
+compatível com a coluna: para um ID `int`, use `10`; para um ID `long`, use `10L`.
 
-Os relatórios versionados registram a revisão das correções, anterior à
-reorganização dos packages. A versão do artefato é definida no `pom.xml`.
+## Consultas AND/OR
 
-## Rodar os testes
+Importe os tipos usados nos exemplos:
 
-Com JDK 17 e Maven, na raiz do projeto:
+```java
+import io.github.lordcarvel.cdatra.query.LogicalOperator;
+import io.github.lordcarvel.cdatra.query.Operator;
+import io.github.lordcarvel.cdatra.query.QueryCondition;
+import io.github.lordcarvel.cdatra.query.QueryFilter;
+import java.util.List;
+```
+
+Para combinar condições apenas com AND, use `findByConditions`:
+
+```java
+QueryCondition condition1 = new QueryCondition("id", 1, Operator.GREATER_THAN);
+QueryCondition condition2 = new QueryCondition("name", "Carvel", Operator.EQUAL);
+
+List<User> users = repository.findByConditions(List.of(condition1, condition2));
+```
+
+Representa `id > 1 AND name = 'Carvel'`.
+
+Para escolher AND ou OR entre condições, use `findByFilters`:
+
+```java
+QueryCondition condition1 = new QueryCondition("id", 1, Operator.GREATER_THAN);
+QueryCondition condition2 = new QueryCondition("name", "Carvel", Operator.EQUAL);
+
+List<User> andUsers = repository.findByFilters(List.of(
+        new QueryFilter(condition1, null),
+        new QueryFilter(condition2, LogicalOperator.AND)
+));
+
+List<User> orUsers = repository.findByFilters(List.of(
+        new QueryFilter(condition1, null),
+        new QueryFilter(condition2, LogicalOperator.OR)
+));
+```
+
+O operador lógico de cada filtro liga sua condição à anterior. O primeiro não
+tem condição anterior, então seu operador é ignorado e pode ser `null`. A partir
+do segundo filtro, o operador lógico é obrigatório.
+
+Listas de condições ou filtros precisam ter pelo menos um elemento. Na mistura
+de AND e OR, vale a precedência nativa do SQL: AND é avaliado antes de OR. A API
+não oferece agrupamento explícito por parênteses.
+
+## Annotations
+
+Todas ficam em `io.github.lordcarvel.cdatra.annotation`:
+
+| Annotation | Uso |
+| --- | --- |
+| `@Entity(tableNaame = "users")` | Define o nome da tabela da classe. |
+| `@Column(columName = "name")` | Inclui o campo no mapeamento e define o nome da coluna. |
+| `@Id` | Marca a única chave primária da entidade; exige `@Column`. |
+| `@GeneratedValue` | Pede geração do ID pelo banco; exige `@Id`, `@Column` e int/Integer ou long/Long. |
+
+Campos herdados participam do mapeamento. Campos static e sintéticos são
+ignorados. A classe concreta usada no Repository precisa de `@Entity`.
+
+Entidades sem ID podem ser salvas e consultadas pelas buscas em lista; operações
+por ID exigem `@Id`. A tabela precisa ter pelo menos uma coluna anotada.
+
+## Tipos suportados
+
+| Tipo Java | Tipo SQL |
+| --- | --- |
+| `int`, `Integer` | `INTEGER` |
+| `long`, `Long` | `BIGINT` |
+| `boolean`, `Boolean` | `BOOLEAN` |
+| `double`, `Double` | `DOUBLE` |
+| `String` | `VARCHAR` |
+
+Campos objeto podem receber null; campos primitivos não podem receber NULL do
+banco. NaN e infinidades são rejeitados. Não há conversão automática geral de
+tipos, suporte a datas, BigDecimal, enums, coleções ou objetos relacionados como
+colunas.
+
+## Limitações da v0.0.1
+
+O escopo validado é Java 17 com H2 2.5.250 em memória. Não foram certificados
+PostgreSQL, MySQL, SQLite, acesso simultâneo por threads, persistência em disco,
+falhas de rede ou desempenho em produção.
+
+A versão atual tem estes limites:
+
+- Sem migrations, relacionamentos, JOINs, paginação ou API de ORDER BY.
+- Uma única coluna de ID; sem chave primária composta.
+- Nomes de tabela e coluna seguem `[A-Za-z_][A-Za-z0-9_]*`. Não há quoting de
+  identificadores ou nomes qualificados por schema; evite palavras reservadas.
+- SQL gerado como texto, com validação de nomes e tipos e escape de apóstrofos.
+  Não há uma API de parâmetros JDBC para os valores.
+- Sem conversão geral de tipos ou seleção parcial de campos pelo Repository.
+- Commit e rollback pertencem ao chamador. O Repository usa a configuração de
+  transação da conexão recebida e não inicia nem confirma transações sozinho.
+
+Os testes verificam CRUD, filtros, transações e visibilidade entre duas conexões,
+mas não garantem ausência de todo bug nem compatibilidade com outros bancos.
+
+## Status da versão
+
+A versão do `pom.xml` é **0.0.1**. Esta preparação reúne versão e documentação,
+sem adicionar funcionalidades à biblioteca.
+
+Após a reorganização dos packages, os **224 casos distintos** passaram no build
+com cobertura e na repetição da auditoria: zero falhas, zero erros e nenhum teste
+ignorado. Para reproduzir:
 
 ```shell
-mvn test
 mvn -Pcoverage clean verify
-```
-
-Os testes usam H2 em memória, sem servidor e sem alterar bancos externos. Maven
-baixa as dependências na primeira execução. No IntelliJ IDEA, abra o `pom.xml`
-como projeto Maven, configure o JDK 17 e use **Maven → Lifecycle → test**.
-
-O perfil `coverage` gera HTML, XML e CSV em `target/site/jacoco/`. O comando
-`verify` também gera o JAR em `target/`.
-
-Para executar grupos individuais:
-
-```shell
-mvn -Dtest=AnalysisTest,EntityMetadataTest test
-mvn -Dtest=TypeMapperTest test
-mvn -Dtest=ObjectMapperTest,ObjectMapperEdgeTest test
-mvn -Dtest=SqlGeneratorTest,SqlQueryTest test
-mvn -Dtest=SqlExecutorTest,GeneratedKeyExecutorTest test
-mvn -Dtest=RepositoryIntegrationTest test
-mvn -Dtest=SystemSmokeTest test
-```
-
-Para repetir a auditoria ou executar somente os contratos de regressão:
-
-```shell
 mvn -Pdefect-audit test
-mvn -Pdefect-audit -Dtest=KnownDefectsTest test
 ```
 
-**Ambos os comandos devem passar.** O nome `KnownDefectsTest` foi mantido como
-referência à auditoria original. A tag e a exclusão foram removidas: todos esses
-casos também rodam em `mvn test`. O perfil `defect-audit` apenas separa os arquivos
-de resultados em outro diretório.
+Para a suíte padrão, use `mvn test`. Para um grupo específico, por exemplo:
 
-Resultados ficam em `target/surefire-reports` e, para a auditoria, em
-`target/defect-audit-reports`. O comando `clean` remove esses arquivos. O JSON
-versionado é uma fotografia da avaliação, sem atualização automática por Maven.
+```shell
+mvn -Dtest=RepositoryIntegrationTest test
+```
 
-## Comportamento verificado
+O perfil `defect-audit` executa a mesma suíte e separa os resultados em
+`target/defect-audit-reports/`. A suíte padrão grava em `target/surefire-reports/`.
+O perfil `coverage` gera o relatório em `target/site/jacoco/index.html`.
 
-- Repository oferece `createTable`, `save`, `findAll`, `findById`, `findBy`,
-  `findByConditions`, `findByFilters`, `update` e `delete`.
-- IDs Integer/Long gerados são atribuídos à entidade após save; IDs manuais também
-  foram testados. Operações por ID exigem `@Id`.
-- O mapper recebe as colunas de um registro. Colunas extras são ignoradas; colunas
-  anotadas ausentes são erro. O construtor sem argumentos precisa ser acessível.
-- Nulos são aceitos em campos objeto; campos primitivos não podem receber null.
-  Os tipos suportados são int/Integer, long/Long, boolean/Boolean, double/Double
-  e String. Não há uma camada geral de conversão de tipos.
-- Listas de QueryCondition usam AND. QueryFilter acrescenta AND/OR, com a
-  precedência nativa de SQL e sem agrupamento explícito por parênteses. A API não
-  garante ordenação sem ORDER BY.
-- Buscas sem resultado retornam lista vazia; findById retorna null.
-- Statement, PreparedStatement e ResultSet são fechados nos caminhos testados de
-  sucesso e falha. Quem forneceu a Connection continua responsável por fechá-la.
-- Commit e rollback pertencem ao chamador. Foram testados CRUD em transações e
-  visibilidade entre duas conexões; não foi testado acesso simultâneo por threads.
-- Campos herdados participam da análise e do mapeamento; campos static e sintéticos
-  são ignorados. IDs gerados precisam ser int/Integer ou long/Long.
-- Tabelas e colunas devem usar identificadores simples: `[A-Za-z_][A-Za-z0-9_]*`.
-  As consultas exigem valores de tipos compatíveis com os tipos SQL das colunas.
-- Entidades com apenas um ID gerado usam DEFAULT VALUES no save. Sem campos para
-  atualizar, Repository.update valida o ID e não executa um UPDATE vazio.
+O [relatório das correções](docs/testing/v0.0.1-fixes.md) e suas
+[evidências](docs/testing/v0.0.1-fixed-results.json) registram a revisão anterior
+à reorganização. O [relatório da auditoria inicial](docs/testing/v0.0.1-report.md)
+e seu [inventário](docs/testing/v0.0.1-results.json) permanecem como histórico.
+Esses arquivos são fotografias das respectivas revisões, sem atualização
+automática pelo Maven.
 
-A avaliação foi feita com H2 2.5.250 em memória. Não certifica outros bancos,
-persistência em disco ou desempenho em produção. Nomes reservados pelo banco
-precisam ser evitados; a API não faz quoting de identificadores. O gerador mantém
-valores dentro do SQL com escape de texto, sem introduzir uma API de parâmetros.
+O código de produção está em `io.github.lordcarvel.cdatra`, nos packages
+`annotation`, `metadata`, `mapping`, `query`, `sql`, `jdbc` e `repository`.
+Os exemplos internos Main, User e Address ficam em `src/test/java`, no package
+`io.github.lordcarvel.cdatra.example`, e não fazem parte do JAR.
+
+Antes de criar uma tag, confira o estado e os commits finais:
+
+```shell
+git status
+git log --oneline -10
+git diff
+```
+
+O esperado é uma árvore de trabalho limpa e nenhuma alteração esquecida no
+diff. Este preparo não cria uma tag nem publica um pacote no Maven Central.
