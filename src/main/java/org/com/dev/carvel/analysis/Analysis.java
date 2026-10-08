@@ -2,6 +2,7 @@ package org.com.dev.carvel.analysis;
 
 import org.com.dev.carvel.annotations.Column;
 import org.com.dev.carvel.annotations.Entity;
+import org.com.dev.carvel.annotations.GeneratedValue;
 import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.columnDefinition.ColumnDefinition;
 
@@ -55,8 +56,16 @@ public class Analysis {
                 }
 
                 boolean isId = field.isAnnotationPresent(Id.class);
+                boolean isGeneratedValue = field.isAnnotationPresent(GeneratedValue.class);
 
-                columns.add(new ColumnDefinition(column.columName(), field.getType(), isId));
+
+                if (isGeneratedValue && !isId) {
+                    throw new IllegalArgumentException(
+                            "@GeneratedValue field must also be annotated with @Id"
+                    );
+                }
+
+                columns.add(new ColumnDefinition(column.columName(), field.getType(), isId, isGeneratedValue));
             }
         }
 

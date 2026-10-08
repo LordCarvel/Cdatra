@@ -3,12 +3,14 @@ package org.com.dev.carvel.user;
 import org.com.dev.carvel.address.Address;
 import org.com.dev.carvel.annotations.Column;
 import org.com.dev.carvel.annotations.Entity;
+import org.com.dev.carvel.annotations.GeneratedValue;
 import org.com.dev.carvel.annotations.Id;
 
 @Entity(tableNaame = "users")
 public class User {
 
     @Id
+    @GeneratedValue
     private @Column(columName = "id") int id;
     protected @Column(columName = "name") String name;
     protected @Column(columName = "user_email") String email;

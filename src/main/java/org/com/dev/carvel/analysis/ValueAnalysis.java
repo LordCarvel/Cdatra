@@ -1,6 +1,7 @@
 package org.com.dev.carvel.analysis;
 
 import org.com.dev.carvel.annotations.Column;
+import org.com.dev.carvel.annotations.GeneratedValue;
 import org.com.dev.carvel.annotations.Id;
 import org.com.dev.carvel.row.Row;
 
@@ -9,14 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ValueAnalysis {
-    public List<Row> analyze(Object value) throws IllegalArgumentException, IllegalAccessException {
+
+    public List<Row> analyze(Object value) throws IllegalAccessException {
 
         if (value == null) {
 
-            throw new IllegalArgumentException("Analyzed value cannot be null");
+            throw new IllegalArgumentException(
+                    "Analyzed value cannot be null"
+            );
         }
 
         new Analysis().analize(value.getClass());
+
         Field[] fields = value.getClass().getDeclaredFields();
 
         List<Row> rows = new ArrayList<>();
@@ -24,6 +29,12 @@ public class ValueAnalysis {
         for (Field field : fields) {
 
             if (field.isAnnotationPresent(Column.class)) {
+
+                if (field.isAnnotationPresent(GeneratedValue.class)) {
+
+                    continue;
+                }
+
                 Column column = field.getAnnotation(Column.class);
 
                 field.setAccessible(true);
