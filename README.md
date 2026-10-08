@@ -8,13 +8,36 @@ Hoje há criação de tabela, INSERT com retorno de chave gerada, buscas, UPDATE
 DELETE. As entidades usam `@Entity`, `@Column`, `@Id` e `@GeneratedValue`. Os nomes
 atuais da API foram preservados: `analize`, `columName` e `tableNaame`.
 
+## Organização dos packages
+
+O código de produção usa a raiz `io.github.lordcarvel.cdatra`, dividido por
+responsabilidade:
+
+| Package | Classes |
+| --- | --- |
+| `annotation` | Column, Entity, Id, GeneratedValue |
+| `metadata` | Analysis, ColumnDefinition, Table, SchemaBuilder |
+| `mapping` | ValueAnalysis, ObjectMapper, Row, Container |
+| `query` | Operator, LogicalOperator, QueryCondition, QueryFilter |
+| `sql` | SqlGenerator, SqlType, TypeMapper |
+| `jdbc` | DatabaseConnection, SqlExecutor |
+| `repository` | Repository |
+
+Main, User e Address ficam em `src/test/java/io/github/lordcarvel/cdatra/example/`
+e continuam sendo usados pelos testes. Esses exemplos não fazem parte do JAR.
+A classe vazia Schema foi removida.
+
+A reorganização preserva os corpos dos métodos e os testes existentes. Código
+que usava os packages anteriores precisa atualizar seus imports. As coordenadas
+Maven permanecem definidas no `pom.xml`, sem alteração nesta reorganização.
+
 ## Avaliação da v0.0.1
 
 A validação final de 08/10/2026 possui **224 casos distintos**, todos passando:
 
 - Zero falhas, zero erros e zero testes ignorados na suíte padrão e na auditoria.
 - Os 25 casos que antes falhavam foram corrigidos e integrados à execução padrão.
-- Cobertura atual: **96,88% das linhas** e **94,22% das decisões**.
+- Cobertura na revisão das correções: **96,88% das linhas** e **94,22% das decisões**.
 
 Foram corrigidos o escape da chave textual no UPDATE, a validação do DELETE,
 labels duplicados no mapper, herança de campos, campos static, entidades com
@@ -27,7 +50,8 @@ registram os casos e a cobertura. O
 [relatório anterior](docs/testing/v0.0.1-report.md) e seu
 [inventário](docs/testing/v0.0.1-results.json) permanecem como histórico.
 
-v0.0.1 identifica o marco solicitado; o `pom.xml` continua com `1.0-SNAPSHOT`.
+Os relatórios versionados registram a revisão das correções, anterior à
+reorganização dos packages. A versão do artefato é definida no `pom.xml`.
 
 ## Rodar os testes
 
