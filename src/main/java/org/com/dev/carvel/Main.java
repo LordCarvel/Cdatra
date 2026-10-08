@@ -58,13 +58,28 @@ public class Main {
         repository.save(user1);
         repository.save(user2);
 
-        System.out.println("Before update:");
+        System.out.println("Find by ID:");
 
-        List<User> usersBeforeUpdate =
+        User foundUser =
+                repository.findById(1);
+
+        if (foundUser != null) {
+            System.out.println(
+                    foundUser.getId()
+                            + " | "
+                            + foundUser.getName()
+                            + " | "
+                            + foundUser.getEmail()
+            );
+        }
+
+        System.out.println();
+        System.out.println("Find all:");
+
+        List<User> users =
                 repository.findAll();
 
-        for (User user : usersBeforeUpdate) {
-
+        for (User user : users) {
             System.out.println(
                     user.getId()
                             + " | "
@@ -92,28 +107,28 @@ public class Main {
         System.out.println();
         System.out.println("After update:");
 
-        List<User> usersAfterUpdate =
-                repository.findAll();
+        User updatedFoundUser =
+                repository.findById(1);
 
-        for (User user : usersAfterUpdate) {
-
+        if (updatedFoundUser != null) {
             System.out.println(
-                    user.getId()
+                    updatedFoundUser.getId()
                             + " | "
-                            + user.getName()
+                            + updatedFoundUser.getName()
                             + " | "
-                            + user.getEmail()
+                            + updatedFoundUser.getEmail()
             );
         }
 
-        repository.delete(user2);
+        repository.delete(updatedUser);
 
-        List<User> usersAfterDelete = repository.findAll();
-
+        System.out.println();
         System.out.println("After delete:");
 
-        for (User user : usersAfterDelete) {
+        List<User> usersAfterDelete =
+                repository.findAll();
 
+        for (User user : usersAfterDelete) {
             System.out.println(
                     user.getId()
                             + " | "

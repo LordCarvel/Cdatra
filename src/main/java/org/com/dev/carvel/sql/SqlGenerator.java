@@ -282,6 +282,84 @@ public class SqlGenerator {
         return "SELECT * FROM " + table.getName() + ";";
     }
 
+    public String selectById(Table table, Row idRow) {
+
+        if (table == null) {
+
+            throw new IllegalArgumentException(
+                    "Select table cannot be null"
+            );
+        }
+
+        if (idRow == null) {
+
+            throw new IllegalArgumentException(
+                    "Select ID row cannot be null"
+            );
+        }
+
+        if (idRow.getColumnName() == null || idRow.getColumnName().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Select ID column name cannot be null or blank"
+            );
+        }
+
+        if (idRow.getValue() == null) {
+
+            throw new IllegalArgumentException(
+                    "Select ID value cannot be null"
+            );
+        }
+
+        boolean idFound = false;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (idRow.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                idFound = true;
+            }
+        }
+
+        if (!idFound) {
+
+            throw new IllegalArgumentException(
+                    "ID column not found in table: " + idRow.getColumnName()
+            );
+        }
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("SELECT * FROM ");
+        sql.append(table.getName());
+        sql.append(" WHERE ");
+        sql.append(idRow.getColumnName());
+        sql.append(" = ");
+
+        Object idValue = idRow.getValue();
+
+        SqlType idType = typeMapper.map(idValue.getClass());
+
+        if (idType == SqlType.VARCHAR) {
+
+            String stringValue =
+                    idValue.toString().replace("'", "''");
+
+            sql.append("'");
+            sql.append(stringValue);
+            sql.append("'");
+
+        } else {
+
+            sql.append(idValue);
+        }
+
+        sql.append(";");
+
+        return sql.toString();
+    }
+
     public String update (Table table, List<Row> rows, Row idRow) {
 
         if (table == null) {

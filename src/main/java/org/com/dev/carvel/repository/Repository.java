@@ -10,6 +10,7 @@ import org.com.dev.carvel.sql.SqlExecutor;
 import org.com.dev.carvel.sql.SqlGenerator;
 import org.com.dev.carvel.table.Table;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -70,6 +71,26 @@ public class Repository<T> {
         }
 
         return entities;
+    }
+
+    public T findById (Object idValue) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
+        Table table = buildTable();
+
+        String idColumnName = analysis.analyzeIdColumnName(type);
+
+        Row idRow = new Row(idColumnName, idValue);
+
+        String sql = sqlGenerator.selectById(table, idRow);
+
+        List<List<Row>> result = sqlExecutor.query(connection, sql);
+
+        if (result.isEmpty()) {
+
+            return null;
+        }
+
+        return (T) objectMapper.map(result.get(0), type);
     }
 
     public void update (T entity) throws IllegalAccessException, SQLException {

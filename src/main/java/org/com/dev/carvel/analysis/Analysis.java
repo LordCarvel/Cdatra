@@ -86,4 +86,37 @@ public class Analysis {
 
         return entity.tableNaame();
     }
+
+    public String analyzeIdColumnName (Class<?> value) {
+
+        if (value == null) {
+
+            throw new IllegalArgumentException(
+                    "Analyzed type cannot be null"
+            );
+        }
+
+        Field[] fields = value.getDeclaredFields();
+
+        for (Field field : fields) {
+
+            if (field.isAnnotationPresent(Id.class)) {
+
+                if (!field.isAnnotationPresent(Column.class)) {
+                    throw new IllegalArgumentException(
+                            "@Id field must also be annotated with @Column"
+                    );
+                }
+
+                Column column =
+                        field.getAnnotation(Column.class);
+
+                return column.columName();
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "Entity does not contain an @Id field"
+        );
+    }
 }
