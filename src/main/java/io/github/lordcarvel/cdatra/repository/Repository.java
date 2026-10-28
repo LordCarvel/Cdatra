@@ -1,6 +1,7 @@
 package io.github.lordcarvel.cdatra.repository;
 
-import io.github.lordcarvel.cdatra.jdbc.SqlExecutor;
+import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
+import io.github.lordcarvel.cdatra.jdbc.JdbcDatabaseAdapter;
 import io.github.lordcarvel.cdatra.mapping.ObjectMapper;
 import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.mapping.ValueAnalysis;
@@ -22,29 +23,34 @@ import java.util.List;
 public class Repository<T> {
 
     private final Class<T> type;
-    private final Connection connection;
+
+    private final DatabaseAdapter databaseAdapter;
 
     private final Analysis analysis = new Analysis();
     private final ValueAnalysis valueAnalysis = new ValueAnalysis();
     private final SchemaBuilder schemaBuilder = new SchemaBuilder();
     private final SqlGenerator sqlGenerator = new SqlGenerator();
-    private final SqlExecutor sqlExecutor = new SqlExecutor();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Repository (Class<T> type, Connection connection) {
+
+        this(type, new JdbcDatabaseAdapter(connection));
+    }
+
+    public Repository (Class<T> type, DatabaseAdapter databaseAdapter) {
 
         if (type == null) {
 
             throw new IllegalArgumentException("Repository type cannot be null");
         }
 
-        if (connection == null) {
+        if (databaseAdapter == null) {
 
-            throw new IllegalArgumentException("Database connection cannot be null");
+            throw new IllegalArgumentException("DatabaseAdapter cannot be null");
         }
 
         this.type = type;
-        this.connection = connection;
+        this.databaseAdapter = databaseAdapter;
     }
 
     public void createTable () throws SQLException {
@@ -52,7 +58,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.createTable(table);
 
-        sqlExecutor.execute(connection, sql);
+        databaseAdapter.execute(sql);
     }
 
     public void save (T entity) throws IllegalAccessException, SQLException {
@@ -61,7 +67,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.insert(table, rows);
 
-        Object generatedValue = sqlExecutor.executeAndReturnGeneratedKey(connection, sql);
+        Object generatedValue = databaseAdapter.executeAndReturnGeneratedKey(sql);
 
         if (generatedValue != null) {
 
@@ -74,7 +80,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.selectAll(table);
 
-        List<List<Row>> result = sqlExecutor.query(connection, sql);
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         List<T> entities = new ArrayList<>();
 
@@ -94,7 +100,7 @@ public class Repository<T> {
         Row idRow = new Row(idColumnName, idValue);
         String sql = sqlGenerator.selectById(table, idRow);
 
-        List<List<Row>> result = sqlExecutor.query(connection, sql);
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         if (result.isEmpty()) {
 
@@ -110,7 +116,7 @@ public class Repository<T> {
         Row row = new Row(columnName, value);
         String sql = sqlGenerator.selectBy(table, row, operator);
 
-        List<List<Row>> result = sqlExecutor.query(connection, sql);
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         List<T> entities = new ArrayList<>();
 
@@ -129,7 +135,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.selectByConditions(table, conditions);
 
-        List<List<Row>> result = sqlExecutor.query(connection, sql);
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         List<T> entities = new ArrayList<>();
 
@@ -149,7 +155,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.selectByFilters(table, filters);
 
-        List<List<Row>> result = sqlExecutor.query(connection, sql);
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         List<T> entities = new ArrayList<>();
 
@@ -180,7 +186,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.update(table, rows, idRow);
 
-        sqlExecutor.execute(connection, sql);
+        databaseAdapter.execute(sql);
     }
 
     public void delete (T entity) throws IllegalAccessException, SQLException {
@@ -189,7 +195,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.delete(table, idRow);
 
-        sqlExecutor.execute(connection, sql);
+        databaseAdapter.execute(sql);
     }
 
     private Table buildTable () {

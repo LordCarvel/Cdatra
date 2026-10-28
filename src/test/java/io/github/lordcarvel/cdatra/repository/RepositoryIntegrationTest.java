@@ -323,7 +323,7 @@ class RepositoryIntegrationTest {
     void rejectsInvalidQueriesAndEntitiesWithoutChangingExistingRows () throws Exception {
 
         assertThrows(IllegalArgumentException.class, () -> new Repository<>(null, connection));
-        assertThrows(IllegalArgumentException.class, () -> new Repository<>(Record.class, null));
+        assertThrows(IllegalArgumentException.class, () -> new Repository<>((Class) Record.class, (Connection) null));
         seed();
         assertThrows(IllegalArgumentException.class, () -> repository.save(null));
         assertThrows(IllegalArgumentException.class, () -> repository.update(null));
