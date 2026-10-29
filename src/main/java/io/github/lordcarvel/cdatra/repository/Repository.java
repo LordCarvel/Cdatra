@@ -66,9 +66,9 @@ public class Repository<T> {
 
         List<Row> rows = valueAnalysis.analyze(entity);
         Table table = buildTable();
-        String sql = sqlGenerator.insert(table, rows);
+        SqlQuery query = sqlGenerator.insert(table, rows);
 
-        Object generatedValue = databaseAdapter.executeAndReturnGeneratedKey(new SqlQuery(sql, List.of()));
+        Object generatedValue = databaseAdapter.executeAndReturnGeneratedKey(query);
 
         if (generatedValue != null) {
 

@@ -151,7 +151,7 @@ public class SqlGenerator {
         }
     }
 
-    public String insert (Table table, List<Row> rows) {
+    public SqlQuery insert (Table table, List<Row> rows) {
 
         if (table == null) {
 
@@ -169,7 +169,7 @@ public class SqlGenerator {
 
             if (table.getColumnDefinitions().stream().allMatch(ColumnDefinition::isGeneratedValue)) {
 
-                return "INSERT INTO " + table.getName() + " DEFAULT VALUES;";
+                return new SqlQuery("INSERT INTO " + table.getName() + " DEFAULT VALUES;", List.of());
             }
 
             throw new IllegalArgumentException("Insert requires at least one row");
@@ -271,32 +271,16 @@ public class SqlGenerator {
 
         StringBuilder sqlValue = new StringBuilder();
 
+        List<Object> parameters = new ArrayList<>();
+
         sqlValue.append(" VALUES (");
 
         for (int i = 0; i < rows.size();) {
 
             Object value = rows.get(i).getValue();
 
-            if (value == null) {
-
-                sqlValue.append("NULL");
-            } else {
-
-                SqlType sqlType = typeMapper.map(value.getClass());
-
-                if (sqlType == SqlType.VARCHAR) {
-
-                    String stringValue = value.toString();
-                    stringValue = stringValue.replace("'", "''");
-
-                    sqlValue.append("'");
-                    sqlValue.append(stringValue);
-                    sqlValue.append("'");
-                } else {
-
-                    sqlValue.append(value);
-                }
-            }
+            sqlValue.append("?");
+            parameters.add(value);
 
             if (i < rows.size() - 1) {
 
@@ -309,7 +293,7 @@ public class SqlGenerator {
         sql.append(sqlValue);
         sql.append(");");
 
-        return sql.toString();
+        return new SqlQuery(sql.toString(), parameters);
     }
 
     public SqlQuery selectAll (Table table) {

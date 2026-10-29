@@ -59,15 +59,25 @@ class SqlGeneratorTest {
     }
 
     @Test
-    void insertsEscapedTextNullAndSupportedValues () {
+    void insertsTextNullAndSupportedValuesAsParameters () {
 
         var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false),
                 new ColumnDefinition("name", String.class, false, false), new ColumnDefinition("optional", String.class, false, false),
                 new ColumnDefinition("total", long.class, false, false), new ColumnDefinition("active", boolean.class, false, false),
                 new ColumnDefinition("score", double.class, false, false)));
-        assertEquals("INSERT INTO people (id, name, optional, total, active, score) VALUES (1, 'D''Ávila', NULL, 5, true, 1.5);",
-                generator.insert(table, List.of(new Row("id", 1), new Row("name", "D'Ávila"),
-                        new Row("optional", null), new Row("total", 5L), new Row("active", true), new Row("score", 1.5))));
+        var insert = generator.insert(table, List.of(new Row("id", 1), new Row("name", "D'Ávila"),
+                new Row("optional", null), new Row("total", 5L), new Row("active", true), new Row("score", 1.5)));
+        assertEquals("INSERT INTO people (id, name, optional, total, active, score) VALUES (?, ?, ?, ?, ?, ?);", insert.getSql());
+        assertEquals(Arrays.asList(1, "D'Ávila", null, 5L, true, 1.5), insert.getParameters());
+    }
+
+    @Test
+    void insertsDefaultValuesWithoutParameters () {
+
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, true, true)));
+        var insert = generator.insert(table, List.of());
+        assertEquals("INSERT INTO people DEFAULT VALUES;", insert.getSql());
+        assertTrue(insert.getParameters().isEmpty());
     }
 
     @ParameterizedTest
