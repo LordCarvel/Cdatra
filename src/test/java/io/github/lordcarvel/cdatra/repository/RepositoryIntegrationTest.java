@@ -1,5 +1,6 @@
 package io.github.lordcarvel.cdatra.repository;
 
+import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
 import io.github.lordcarvel.cdatra.example.User;
 import io.github.lordcarvel.cdatra.query.LogicalOperator;
 import io.github.lordcarvel.cdatra.query.Operator;
@@ -323,7 +324,8 @@ class RepositoryIntegrationTest {
     void rejectsInvalidQueriesAndEntitiesWithoutChangingExistingRows () throws Exception {
 
         assertThrows(IllegalArgumentException.class, () -> new Repository<>(null, connection));
-        assertThrows(IllegalArgumentException.class, () -> new Repository<>((Class) Record.class, (Connection) null));
+        assertThrows(IllegalArgumentException.class, () -> new Repository<>(Record.class, (Connection) null));
+        assertThrows(IllegalArgumentException.class, () -> new Repository<>(Record.class, (DatabaseAdapter) null));
         seed();
         assertThrows(IllegalArgumentException.class, () -> repository.save(null));
         assertThrows(IllegalArgumentException.class, () -> repository.update(null));
