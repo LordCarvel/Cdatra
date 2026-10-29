@@ -2,6 +2,7 @@ package io.github.lordcarvel.cdatra.jdbc;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
 import io.github.lordcarvel.cdatra.mapping.Row;
+import io.github.lordcarvel.cdatra.sql.SqlQuery;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,20 +25,20 @@ public class JdbcDatabaseAdapter implements DatabaseAdapter {
     }
 
     @Override
-    public void execute (String sql) throws SQLException {
+    public void execute (SqlQuery query) throws SQLException {
 
-        sqlExecutor.execute(connection, sql);
+        sqlExecutor.execute(connection, query);
     }
 
     @Override
-    public List<List<Row>> query (String sql) throws SQLException {
+    public List<List<Row>> query (SqlQuery query) throws SQLException {
 
-        return sqlExecutor.query(connection, sql);
+        return sqlExecutor.query(connection, query);
     }
 
     @Override
-    public Object executeAndReturnGeneratedKey (String sql) throws SQLException {
+    public Object executeAndReturnGeneratedKey (SqlQuery query) throws SQLException {
 
-        return sqlExecutor.executeAndReturnGeneratedKey(connection, sql);
+        return sqlExecutor.executeAndReturnGeneratedKey(connection, query);
     }
 }

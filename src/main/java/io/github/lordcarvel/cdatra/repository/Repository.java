@@ -13,6 +13,7 @@ import io.github.lordcarvel.cdatra.query.Operator;
 import io.github.lordcarvel.cdatra.query.QueryCondition;
 import io.github.lordcarvel.cdatra.query.QueryFilter;
 import io.github.lordcarvel.cdatra.sql.SqlGenerator;
+import io.github.lordcarvel.cdatra.sql.SqlQuery;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
@@ -58,7 +59,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.createTable(table);
 
-        databaseAdapter.execute(sql);
+        databaseAdapter.execute(new SqlQuery(sql, List.of()));
     }
 
     public void save (T entity) throws IllegalAccessException, SQLException {
@@ -67,7 +68,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.insert(table, rows);
 
-        Object generatedValue = databaseAdapter.executeAndReturnGeneratedKey(sql);
+        Object generatedValue = databaseAdapter.executeAndReturnGeneratedKey(new SqlQuery(sql, List.of()));
 
         if (generatedValue != null) {
 
@@ -80,7 +81,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.selectAll(table);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
 
         List<T> entities = new ArrayList<>();
 
@@ -100,7 +101,7 @@ public class Repository<T> {
         Row idRow = new Row(idColumnName, idValue);
         String sql = sqlGenerator.selectById(table, idRow);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
 
         if (result.isEmpty()) {
 
@@ -116,7 +117,7 @@ public class Repository<T> {
         Row row = new Row(columnName, value);
         String sql = sqlGenerator.selectBy(table, row, operator);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
 
         List<T> entities = new ArrayList<>();
 
@@ -135,7 +136,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.selectByConditions(table, conditions);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
 
         List<T> entities = new ArrayList<>();
 
@@ -155,7 +156,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.selectByFilters(table, filters);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
 
         List<T> entities = new ArrayList<>();
 
@@ -186,7 +187,7 @@ public class Repository<T> {
 
         String sql = sqlGenerator.update(table, rows, idRow);
 
-        databaseAdapter.execute(sql);
+        databaseAdapter.execute(new SqlQuery(sql, List.of()));
     }
 
     public void delete (T entity) throws IllegalAccessException, SQLException {
@@ -195,7 +196,7 @@ public class Repository<T> {
         Table table = buildTable();
         String sql = sqlGenerator.delete(table, idRow);
 
-        databaseAdapter.execute(sql);
+        databaseAdapter.execute(new SqlQuery(sql, List.of()));
     }
 
     private Table buildTable () {
