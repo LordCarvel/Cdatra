@@ -442,7 +442,7 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String delete (Table table, Row idRow) {
+    public SqlQuery delete (Table table, Row idRow) {
 
         if (table == null) {
 
@@ -459,9 +459,15 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Delete ID value cannot be null");
         }
 
-        String condition = buildCondition(table, idRow, Operator.EQUAL);
+        SqlBuilder sql = new SqlBuilder();
 
-        return "DELETE FROM " + table.getName() + " WHERE " + condition + ";";
+        sql.append("DELETE FROM " + table.getName() + " WHERE ");
+
+        appendCondition(sql, table, idRow, Operator.EQUAL);
+
+        sql.append(";");
+
+        return sql.build();
     }
 
     public String selectBy (Table table, Row row, Operator operator) {

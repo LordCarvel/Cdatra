@@ -99,9 +99,9 @@ public class Repository<T> {
         Table table = buildTable();
         String idColumnName = analysis.analyzeIdColumnName(type);
         Row idRow = new Row(idColumnName, idValue);
-        SqlQuery sql = sqlGenerator.selectById(table, idRow);
+        SqlQuery query = sqlGenerator.selectById(table, idRow);
 
-        List<List<Row>> result = databaseAdapter.query(sql);
+        List<List<Row>> result = databaseAdapter.query(query);
 
         if (result.isEmpty()) {
 
@@ -194,9 +194,9 @@ public class Repository<T> {
 
         Row idRow = valueAnalysis.analyzeId(entity);
         Table table = buildTable();
-        String sql = sqlGenerator.delete(table, idRow);
+        SqlQuery query = sqlGenerator.delete(table, idRow);
 
-        databaseAdapter.execute(new SqlQuery(sql, List.of()));
+        databaseAdapter.execute(query);
     }
 
     private Table buildTable () {

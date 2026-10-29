@@ -143,8 +143,12 @@ class SqlQueryTest {
         assertTrue(createTable.getParameters().isEmpty());
         assertEquals("UPDATE people SET name = 'O''Brien' WHERE id = 7;", generator.update(table, List.of(new Row("name", "O'Brien")), new Row("id", 7)));
         assertEquals("UPDATE people SET name = NULL WHERE id = 7;", generator.update(table, List.of(new Row("name", null)), new Row("id", 7)));
-        assertEquals("DELETE FROM people WHERE id = 7;", generator.delete(table, new Row("id", 7)));
-        assertEquals("DELETE FROM people WHERE name = 'O''Brien';", generator.delete(table, new Row("name", "O'Brien")));
+        SqlQuery deleteById = generator.delete(table, new Row("id", 7));
+        assertEquals("DELETE FROM people WHERE id = ?;", deleteById.getSql());
+        assertEquals(List.of(7), deleteById.getParameters());
+        SqlQuery deleteByName = generator.delete(table, new Row("name", "O'Brien"));
+        assertEquals("DELETE FROM people WHERE name = ?;", deleteByName.getSql());
+        assertEquals(List.of("O'Brien"), deleteByName.getParameters());
     }
 
     @TestFactory
