@@ -15,7 +15,7 @@ public class SqlGenerator {
 
     private final TypeMapper typeMapper = new TypeMapper();
 
-    public String createTable (Table table) {
+    public SqlQuery createTable (Table table) {
 
         validateTable(table);
 
@@ -52,7 +52,7 @@ public class SqlGenerator {
 
         sql.append(");");
 
-        return sql.toString();
+        return new SqlQuery(sql.toString(), List.of());
     }
 
     private void validateTable (Table table) {

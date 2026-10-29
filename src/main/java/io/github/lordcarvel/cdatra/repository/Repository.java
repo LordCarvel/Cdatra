@@ -57,9 +57,9 @@ public class Repository<T> {
     public void createTable () throws SQLException {
 
         Table table = buildTable();
-        String sql = sqlGenerator.createTable(table);
+        SqlQuery query = sqlGenerator.createTable(table);
 
-        databaseAdapter.execute(new SqlQuery(sql, List.of()));
+        databaseAdapter.execute(query);
     }
 
     public void save (T entity) throws IllegalAccessException, SQLException {

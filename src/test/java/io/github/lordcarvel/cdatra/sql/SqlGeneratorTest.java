@@ -53,7 +53,9 @@ class SqlGeneratorTest {
         var table = new Table("people", List.of(new ColumnDefinition("id", int.class, false, false),
                 new ColumnDefinition("name", String.class, false, false), new ColumnDefinition("total", Long.class, false, false),
                 new ColumnDefinition("active", boolean.class, false, false), new ColumnDefinition("score", Double.class, false, false)));
-        assertEquals("CREATE TABLE people (id INTEGER, name VARCHAR, total BIGINT, active BOOLEAN, score DOUBLE);", generator.createTable(table));
+        var createTable = generator.createTable(table);
+        assertEquals("CREATE TABLE people (id INTEGER, name VARCHAR, total BIGINT, active BOOLEAN, score DOUBLE);", createTable.getSql());
+        assertTrue(createTable.getParameters().isEmpty());
     }
 
     @Test
