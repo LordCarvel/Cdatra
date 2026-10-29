@@ -78,9 +78,12 @@ class SqlQueryTest {
         assertEquals("SELECT * FROM people WHERE id > ?;", single.getSql());
         assertEquals(List.of(1), single.getParameters());
         var filters = List.of(new QueryFilter(conditions.get(0), null), new QueryFilter(conditions.get(1), LogicalOperator.OR));
-        assertEquals("SELECT * FROM people WHERE id > 1 OR name = 'Carvel';", generator.selectByFilters(table, filters));
-        assertEquals("SELECT * FROM people WHERE id > 1 AND name = 'Carvel';",
-                generator.selectByFilters(table, List.of(filters.get(0), new QueryFilter(conditions.get(1), LogicalOperator.AND))));
+        SqlQuery orFilters = generator.selectByFilters(table, filters);
+        assertEquals("SELECT * FROM people WHERE id > ? OR name = ?;", orFilters.getSql());
+        assertEquals(List.of(1, "Carvel"), orFilters.getParameters());
+        SqlQuery andFilters = generator.selectByFilters(table, List.of(filters.get(0), new QueryFilter(conditions.get(1), LogicalOperator.AND)));
+        assertEquals("SELECT * FROM people WHERE id > ? AND name = ?;", andFilters.getSql());
+        assertEquals(List.of(1, "Carvel"), andFilters.getParameters());
         assertEquals(2, conditions.size());
         assertNull(filters.get(0).getLogicalOperator());
         assertEquals("Carvel", conditions.get(1).getValue());
@@ -90,11 +93,14 @@ class SqlQueryTest {
     void ignoresFirstLogicalOperatorAndPreservesMixedSqlPrecedence () {
 
         var first = new QueryCondition("id", 1, Operator.EQUAL);
-        assertEquals("SELECT * FROM people WHERE id = 1;", generator.selectByFilters(table, List.of(new QueryFilter(first, LogicalOperator.OR))));
-        assertEquals("SELECT * FROM people WHERE id = 1 OR name = 'Carvel' AND id > 2;",
-                generator.selectByFilters(table, List.of(new QueryFilter(first, null),
-                        new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.OR),
-                        new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), LogicalOperator.AND))));
+        SqlQuery single = generator.selectByFilters(table, List.of(new QueryFilter(first, LogicalOperator.OR)));
+        assertEquals("SELECT * FROM people WHERE id = ?;", single.getSql());
+        assertEquals(List.of(1), single.getParameters());
+        SqlQuery mixed = generator.selectByFilters(table, List.of(new QueryFilter(first, null),
+                new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.OR),
+                new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), LogicalOperator.AND)));
+        assertEquals("SELECT * FROM people WHERE id = ? OR name = ? AND id > ?;", mixed.getSql());
+        assertEquals(List.of(1, "Carvel", 2), mixed.getParameters());
     }
 
     @Test
