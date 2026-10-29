@@ -14,6 +14,7 @@ import io.github.lordcarvel.cdatra.query.QueryCondition;
 import io.github.lordcarvel.cdatra.query.QueryFilter;
 import io.github.lordcarvel.cdatra.repository.Repository;
 import io.github.lordcarvel.cdatra.sql.SqlGenerator;
+import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import io.github.lordcarvel.cdatra.support.TestEntities;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -118,9 +119,9 @@ class KnownDefectsTest {
 
             var executor = new SqlExecutor();
             executor.execute(connection, generator.createTable(table()));
-            executor.execute(connection, "INSERT INTO people VALUES (1, 'first'), (2, 'second')");
+            executor.execute(connection, new SqlQuery("INSERT INTO people VALUES (1, 'first'), (2, 'second')", List.of()));
             assertThrows(IllegalArgumentException.class, () -> generator.delete(table(), new Row("id = 1 OR id", 2)));
-            assertEquals(2, executor.query(connection, "SELECT * FROM people").size());
+            assertEquals(2, executor.query(connection, new SqlQuery("SELECT * FROM people", List.of())).size());
         }
     }
 
@@ -192,7 +193,7 @@ class KnownDefectsTest {
     @Test
     void D09_generatedKeyExecutionValidatesNullConnection () {
 
-        assertThrows(IllegalArgumentException.class, () -> new SqlExecutor().executeAndReturnGeneratedKey(null, "INSERT INTO people VALUES (1)"));
+        assertThrows(IllegalArgumentException.class, () -> new SqlExecutor().executeAndReturnGeneratedKey(null, new SqlQuery("INSERT INTO people VALUES (1)", List.of())));
     }
 
     @ParameterizedTest

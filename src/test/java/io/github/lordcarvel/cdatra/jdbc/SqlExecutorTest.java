@@ -6,6 +6,7 @@ import io.github.lordcarvel.cdatra.mapping.ValueAnalysis;
 import io.github.lordcarvel.cdatra.metadata.Analysis;
 import io.github.lordcarvel.cdatra.metadata.SchemaBuilder;
 import io.github.lordcarvel.cdatra.sql.SqlGenerator;
+import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -14,10 +15,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,21 +31,43 @@ class SqlExecutorTest {
     @Test
     void rejectsNullConnection () {
 
-        assertThrows(IllegalArgumentException.class, () -> executor.execute(null, "SELECT 1"));
-        assertThrows(IllegalArgumentException.class, () -> executor.query(null, "SELECT 1"));
-        assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(null, "SELECT 1"));
+        assertThrows(IllegalArgumentException.class, () -> executor.execute(null, sql("SELECT 1")));
+        assertThrows(IllegalArgumentException.class, () -> executor.query(null, sql("SELECT 1")));
+        assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(null, sql("SELECT 1")));
+    }
+
+    @Test
+    void rejectsNullQuery () throws Exception {
+
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:")) {
+
+            assertThrows(IllegalArgumentException.class, () -> executor.execute(connection, null));
+            assertThrows(IllegalArgumentException.class, () -> executor.query(connection, null));
+            assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(connection, null));
+        }
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t\n"})
-    void rejectsInvalidSql (String sql) throws Exception {
+    void rejectsInvalidSqlBeforeReachingTheExecutor (String text) {
+
+        assertThrows(IllegalArgumentException.class, () -> new SqlQuery(text, List.of()));
+    }
+
+    @Test
+    void bindsParametersInOrder () throws Exception {
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:")) {
 
-            assertThrows(IllegalArgumentException.class, () -> executor.execute(connection, sql));
-            assertThrows(IllegalArgumentException.class, () -> executor.query(connection, sql));
-            assertThrows(IllegalArgumentException.class, () -> executor.executeAndReturnGeneratedKey(connection, sql));
+            executor.execute(connection, sql("CREATE TABLE people (id INTEGER, name VARCHAR)"));
+            executor.execute(connection, new SqlQuery("INSERT INTO people VALUES (?, ?)", List.of(1, "D'Ávila")));
+            executor.execute(connection, new SqlQuery("INSERT INTO people VALUES (?, ?)", Arrays.asList(2, null)));
+
+            var byId = executor.query(connection, new SqlQuery("SELECT name FROM people WHERE id = ?", List.of(1)));
+            assertEquals("D'Ávila", byId.get(0).get(0).getValue());
+            var withoutName = executor.query(connection, sql("SELECT id FROM people WHERE name IS NULL"));
+            assertEquals(2, withoutName.get(0).get(0).getValue());
         }
     }
 
@@ -52,8 +76,8 @@ class SqlExecutorTest {
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:")) {
 
-            executor.execute(connection, "CREATE TABLE people (id INTEGER)");
-            assertTrue(executor.query(connection, "SELECT * FROM people").isEmpty());
+            executor.execute(connection, sql("CREATE TABLE people (id INTEGER)"));
+            assertTrue(executor.query(connection, sql("SELECT * FROM people")).isEmpty());
             assertFalse(connection.isClosed());
         }
     }
@@ -72,7 +96,7 @@ class SqlExecutorTest {
             executor.execute(connection, generator.insert(table, values.analyze(new User(1, "D'Ávila", "first@example.com", null, "ignored"))));
             executor.execute(connection, generator.insert(table, values.analyze(new User(2, "Carvel", null, null, "ignored"))));
 
-            var result = executor.query(connection, "SELECT * FROM people ORDER BY id");
+            var result = executor.query(connection, sql("SELECT * FROM people ORDER BY id"));
             assertEquals(2, result.size());
             assertEquals(3, result.get(0).size());
             assertEquals(3, result.get(1).size());
@@ -96,9 +120,9 @@ class SqlExecutorTest {
 
         try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:")) {
 
-            executor.execute(connection, "CREATE TABLE people (original INTEGER)");
-            executor.execute(connection, "INSERT INTO people VALUES (1)");
-            var result = executor.query(connection, "SELECT original AS id FROM people");
+            executor.execute(connection, sql("CREATE TABLE people (original INTEGER)"));
+            executor.execute(connection, sql("INSERT INTO people VALUES (1)"));
+            var result = executor.query(connection, sql("SELECT original AS id FROM people"));
             assertEquals("ID", result.get(0).get(0).getColumnName());
             assertEquals(1, result.get(0).get(0).getValue());
         }
@@ -108,7 +132,7 @@ class SqlExecutorTest {
     void closesStatementWhenExecuteFails () {
 
         var closed = new ArrayList<String>();
-        assertThrows(SQLException.class, () -> executor.execute(failingConnection(closed, false), "invalid"));
+        assertThrows(SQLException.class, () -> executor.execute(failingConnection(closed, false), sql("invalid")));
         assertEquals(List.of("statement"), closed);
     }
 
@@ -116,7 +140,7 @@ class SqlExecutorTest {
     void closesStatementWhenQueryFailsBeforeResultSetExists () {
 
         var closed = new ArrayList<String>();
-        assertThrows(SQLException.class, () -> executor.query(failingConnection(closed, false), "invalid"));
+        assertThrows(SQLException.class, () -> executor.query(failingConnection(closed, false), sql("invalid")));
         assertEquals(List.of("statement"), closed);
     }
 
@@ -124,8 +148,13 @@ class SqlExecutorTest {
     void closesResultSetAndStatementWhenReadingFails () {
 
         var closed = new ArrayList<String>();
-        assertThrows(SQLException.class, () -> executor.query(failingConnection(closed, true), "SELECT 1"));
+        assertThrows(SQLException.class, () -> executor.query(failingConnection(closed, true), sql("SELECT 1")));
         assertEquals(List.of("resultSet", "statement"), closed);
+    }
+
+    private static SqlQuery sql (String text) {
+
+        return new SqlQuery(text, List.of());
     }
 
     // Small JDBC doubles to force failures that a normal H2 query rarely produces.
@@ -143,7 +172,7 @@ class SqlExecutorTest {
             throw new SQLException("Reading failed");
         });
 
-        Statement statement = (Statement) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{Statement.class}, (proxy, method, args) -> {
+        PreparedStatement statement = (PreparedStatement) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{PreparedStatement.class}, (proxy, method, args) -> {
 
             if (method.getName().equals("close")) {
 
@@ -162,12 +191,12 @@ class SqlExecutorTest {
 
         return (Connection) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{Connection.class}, (proxy, method, args) -> {
 
-            if (method.getName().equals("createStatement")) {
+            if (method.getName().equals("prepareStatement")) {
 
                 return statement;
             }
 
-            throw new AssertionError("Executor should only create a statement");
+            throw new AssertionError("Executor should only prepare a statement");
         });
     }
 }
