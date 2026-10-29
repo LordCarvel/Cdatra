@@ -79,9 +79,9 @@ public class Repository<T> {
     public List<T> findAll () throws Exception {
 
         Table table = buildTable();
-        String sql = sqlGenerator.selectAll(table);
+        SqlQuery query = sqlGenerator.selectAll(table);
 
-        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
+        List<List<Row>> result = databaseAdapter.query(query);
 
         List<T> entities = new ArrayList<>();
 

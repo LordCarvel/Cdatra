@@ -312,7 +312,7 @@ public class SqlGenerator {
         return sql.toString();
     }
 
-    public String selectAll (Table table) {
+    public SqlQuery selectAll (Table table) {
 
         if (table == null) {
 
@@ -326,7 +326,7 @@ public class SqlGenerator {
 
         validateTable(table);
 
-        return "SELECT * FROM " + table.getName() + ";";
+        return new SqlQuery("SELECT * FROM " + table.getName() + ";", List.of());
     }
 
     public String selectById (Table table, Row idRow) {

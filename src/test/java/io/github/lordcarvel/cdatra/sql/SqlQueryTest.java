@@ -88,7 +88,9 @@ class SqlQueryTest {
     @Test
     void rendersSelectAllAndIdSelection () {
 
-        assertEquals("SELECT * FROM people;", generator.selectAll(table));
+        SqlQuery selectAll = generator.selectAll(table);
+        assertEquals("SELECT * FROM people;", selectAll.getSql());
+        assertTrue(selectAll.getParameters().isEmpty());
         assertEquals("SELECT * FROM people WHERE id = 7;", generator.selectById(table, new Row("id", 7)));
         assertEquals("SELECT * FROM people WHERE name = 'O''Brien';", generator.selectById(table, new Row("name", "O'Brien")));
     }
