@@ -4,6 +4,7 @@ import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.metadata.ColumnDefinition;
 import io.github.lordcarvel.cdatra.metadata.SchemaBuilder;
 import io.github.lordcarvel.cdatra.metadata.Table;
+import io.github.lordcarvel.cdatra.sql.dialect.SqlDialect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -78,6 +79,37 @@ class SqlGeneratorTest {
         var insert = generator.insert(table, List.of());
         assertEquals("INSERT INTO people DEFAULT VALUES;", insert.getSql());
         assertTrue(insert.getParameters().isEmpty());
+    }
+
+    @Test
+    void rejectsNullDialect () {
+
+        assertThrows(IllegalArgumentException.class, () -> new SqlGenerator(null));
+    }
+
+    @Test
+    void createTableAsksTheDialectForTypesAndGeneratedIds () {
+
+        var dialect = new SqlDialect() {
+
+            @Override
+            public String typeName (SqlType type) {
+
+                return "T_" + type.name();
+            }
+
+            @Override
+            public String generatedIdColumn (String columnName, SqlType type) {
+
+                return columnName + " AUTO_" + type.name();
+            }
+        };
+        var table = new Table("people", List.of(new ColumnDefinition("id", long.class, true, true),
+                new ColumnDefinition("name", String.class, false, false)));
+        assertEquals("CREATE TABLE people (id AUTO_BIGINT, name T_VARCHAR);", new SqlGenerator(dialect).createTable(table).getSql());
+
+        var manualId = new Table("people", List.of(new ColumnDefinition("id", int.class, true, false)));
+        assertEquals("CREATE TABLE people (id T_INTEGER PRIMARY KEY);", new SqlGenerator(dialect).createTable(manualId).getSql());
     }
 
     @Test
