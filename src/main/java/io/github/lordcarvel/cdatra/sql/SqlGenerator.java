@@ -470,19 +470,22 @@ public class SqlGenerator {
         return sql.build();
     }
 
-    public String selectBy (Table table, Row row, Operator operator) {
+    public SqlQuery selectBy (Table table, Row row, Operator operator) {
 
-        String condition = buildCondition(table, row, operator);
+        if (table == null) {
 
-        StringBuilder sql = new StringBuilder();
+            throw new IllegalArgumentException("Select table cannot be null");
+        }
 
-        sql.append("SELECT * FROM ");
-        sql.append(table.getName());
-        sql.append(" WHERE ");
-        sql.append(condition);
+        SqlBuilder sql = new SqlBuilder();
+
+        sql.append("SELECT * FROM " + table.getName() + " WHERE ");
+
+        appendCondition(sql, table, row, operator);
+
         sql.append(";");
 
-        return sql.toString();
+        return sql.build();
     }
 
     public String selectByConditions (Table table, List<QueryCondition> conditions) {

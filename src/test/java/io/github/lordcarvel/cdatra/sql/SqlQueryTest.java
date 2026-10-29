@@ -31,14 +31,20 @@ class SqlQueryTest {
     @CsvSource({"EQUAL, =", "NOT_EQUAL, !=", "GREATER_THAN, >", "LESS_THAN, <", "GREATER_THAN_OR_EQUAL, >=", "LESS_THAN_OR_EQUAL, <="})
     void rendersEveryComparison (Operator operator, String sqlOperator) {
 
-        assertEquals("SELECT * FROM people WHERE id " + sqlOperator + " 2;", generator.selectBy(table, new Row("id", 2), operator));
+        SqlQuery query = generator.selectBy(table, new Row("id", 2), operator);
+        assertEquals("SELECT * FROM people WHERE id " + sqlOperator + " ?;", query.getSql());
+        assertEquals(List.of(2), query.getParameters());
     }
 
     @Test
     void rendersNullEqualityAndInequality () {
 
-        assertEquals("SELECT * FROM people WHERE name IS NULL;", generator.selectBy(table, new Row("name", null), Operator.EQUAL));
-        assertEquals("SELECT * FROM people WHERE name IS NOT NULL;", generator.selectBy(table, new Row("name", null), Operator.NOT_EQUAL));
+        SqlQuery isNull = generator.selectBy(table, new Row("name", null), Operator.EQUAL);
+        assertEquals("SELECT * FROM people WHERE name IS NULL;", isNull.getSql());
+        assertTrue(isNull.getParameters().isEmpty());
+        SqlQuery isNotNull = generator.selectBy(table, new Row("name", null), Operator.NOT_EQUAL);
+        assertEquals("SELECT * FROM people WHERE name IS NOT NULL;", isNotNull.getSql());
+        assertTrue(isNotNull.getParameters().isEmpty());
     }
 
     @ParameterizedTest
@@ -52,8 +58,9 @@ class SqlQueryTest {
     void preservesSqlLookingTextAndEscapesQuotes () {
 
         String value = "D'Ávila; SELECT * FROM people WHERE 'x'='x' --";
-        assertEquals("SELECT * FROM people WHERE name = 'D''Ávila; SELECT * FROM people WHERE ''x''=''x'' --';",
-                generator.selectBy(table, new Row("name", value), Operator.EQUAL));
+        SqlQuery selectBy = generator.selectBy(table, new Row("name", value), Operator.EQUAL);
+        assertEquals("SELECT * FROM people WHERE name = ?;", selectBy.getSql());
+        assertEquals(List.of(value), selectBy.getParameters());
         assertEquals("SELECT * FROM people WHERE name = 'D''Ávila; SELECT * FROM people WHERE ''x''=''x'' --' AND id > 1;",
                 generator.selectByConditions(table, List.of(new QueryCondition("name", value, Operator.EQUAL),
                         new QueryCondition("id", 1, Operator.GREATER_THAN))));

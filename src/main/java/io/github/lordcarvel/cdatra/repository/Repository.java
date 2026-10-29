@@ -115,9 +115,9 @@ public class Repository<T> {
 
         Table table = buildTable();
         Row row = new Row(columnName, value);
-        String sql = sqlGenerator.selectBy(table, row, operator);
+        SqlQuery query = sqlGenerator.selectBy(table, row, operator);
 
-        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
+        List<List<Row>> result = databaseAdapter.query(query);
 
         List<T> entities = new ArrayList<>();
 
