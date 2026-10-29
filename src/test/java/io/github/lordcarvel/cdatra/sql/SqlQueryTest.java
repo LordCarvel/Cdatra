@@ -91,8 +91,12 @@ class SqlQueryTest {
         SqlQuery selectAll = generator.selectAll(table);
         assertEquals("SELECT * FROM people;", selectAll.getSql());
         assertTrue(selectAll.getParameters().isEmpty());
-        assertEquals("SELECT * FROM people WHERE id = 7;", generator.selectById(table, new Row("id", 7)));
-        assertEquals("SELECT * FROM people WHERE name = 'O''Brien';", generator.selectById(table, new Row("name", "O'Brien")));
+        SqlQuery byId = generator.selectById(table, new Row("id", 7));
+        assertEquals("SELECT * FROM people WHERE id = ?;", byId.getSql());
+        assertEquals(List.of(7), byId.getParameters());
+        SqlQuery byName = generator.selectById(table, new Row("name", "O'Brien"));
+        assertEquals("SELECT * FROM people WHERE name = ?;", byName.getSql());
+        assertEquals(List.of("O'Brien"), byName.getParameters());
     }
 
     @TestFactory

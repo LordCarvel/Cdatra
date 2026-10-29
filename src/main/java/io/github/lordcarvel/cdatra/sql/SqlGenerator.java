@@ -313,7 +313,7 @@ public class SqlGenerator {
         return new SqlQuery("SELECT * FROM " + table.getName() + ";", List.of());
     }
 
-    public String selectById (Table table, Row idRow) {
+    public SqlQuery selectById (Table table, Row idRow) {
 
         if (table == null) {
 
@@ -335,9 +335,15 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Select ID value cannot be null");
         }
 
-        String condition = buildCondition(table, idRow, Operator.EQUAL);
+        SqlBuilder sql = new SqlBuilder();
 
-        return "SELECT * FROM " + table.getName() + " WHERE " + condition + ";";
+        sql.append("SELECT * FROM " + table.getName() + " WHERE ");
+
+        appendCondition(sql, table, idRow, Operator.EQUAL);
+
+        sql.append(";");
+
+        return sql.build();
     }
 
     public String update (Table table, List<Row> rows, Row idRow) {
@@ -720,5 +726,113 @@ public class SqlGenerator {
         }
 
         return condition.toString();
+    }
+
+    private void appendCondition (SqlBuilder sql, Table table, Row row, Operator operator) {
+
+        if (table == null) {
+
+            throw new IllegalArgumentException("Select table cannot be null");
+        }
+
+        if (row == null) {
+
+            throw new IllegalArgumentException("Select row cannot be null");
+        }
+
+        if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+
+            throw new IllegalArgumentException("Select column name cannot be null or blank");
+        }
+
+        if (operator == null) {
+
+            throw new IllegalArgumentException("Select operator cannot be null");
+        }
+
+        validateTable(table);
+        boolean columnFound = false;
+        SqlType columnType = null;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                columnFound = true;
+                columnType = typeMapper.map(columnDefinition.getType());
+            }
+        }
+
+        if (!columnFound) {
+
+            throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
+        }
+
+        String sqlOperator;
+
+        if (operator == Operator.EQUAL) {
+
+            sqlOperator = "=";
+
+        } else if (operator == Operator.NOT_EQUAL) {
+
+            sqlOperator = "!=";
+
+        } else if (operator == Operator.GREATER_THAN) {
+
+            sqlOperator = ">";
+
+        } else if (operator == Operator.LESS_THAN) {
+
+            sqlOperator = "<";
+
+        } else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
+
+            sqlOperator = ">=";
+
+        } else if (operator == Operator.LESS_THAN_OR_EQUAL) {
+
+            sqlOperator = "<=";
+
+        } else {
+
+            throw new IllegalArgumentException("Unsupported operator: " + operator);
+        }
+
+        sql.append(row.getColumnName());
+
+        Object value = row.getValue();
+
+        if (value == null) {
+
+            if (operator == Operator.EQUAL) {
+
+                sql.append(" IS NULL");
+
+            } else if (operator == Operator.NOT_EQUAL) {
+
+                sql.append(" IS NOT NULL");
+
+            } else {
+
+                throw new IllegalArgumentException("Null values only support EQUAL or NOT_EQUAL");
+            }
+        } else {
+
+            SqlType sqlType = typeMapper.map(value.getClass());
+
+            if (sqlType != columnType) {
+
+                throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
+            }
+
+            if (value instanceof Double && !Double.isFinite((Double) value)) {
+
+                throw new IllegalArgumentException("Non-finite value for column: " + row.getColumnName());
+            }
+
+            sql.append(" " + sqlOperator + " ");
+            sql.appendParameter(value);
+        }
     }
 }

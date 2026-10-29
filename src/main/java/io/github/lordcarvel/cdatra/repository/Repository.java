@@ -99,9 +99,9 @@ public class Repository<T> {
         Table table = buildTable();
         String idColumnName = analysis.analyzeIdColumnName(type);
         Row idRow = new Row(idColumnName, idValue);
-        String sql = sqlGenerator.selectById(table, idRow);
+        SqlQuery sql = sqlGenerator.selectById(table, idRow);
 
-        List<List<Row>> result = databaseAdapter.query(new SqlQuery(sql, List.of()));
+        List<List<Row>> result = databaseAdapter.query(sql);
 
         if (result.isEmpty()) {
 
