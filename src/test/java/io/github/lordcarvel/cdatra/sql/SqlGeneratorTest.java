@@ -80,6 +80,18 @@ class SqlGeneratorTest {
         assertTrue(insert.getParameters().isEmpty());
     }
 
+    @Test
+    void updateKeepsSetParametersBeforeTheIdParameter () {
+
+        var table = new Table("people", List.of(new ColumnDefinition("id", int.class, true, false),
+                new ColumnDefinition("name", String.class, false, false), new ColumnDefinition("email", String.class, false, false),
+                new ColumnDefinition("total", long.class, false, false)));
+        var update = generator.update(table, List.of(new Row("name", "D'Ávila"), new Row("email", null), new Row("total", 5L)),
+                new Row("id", 7));
+        assertEquals("UPDATE people SET name = ?, email = ?, total = ? WHERE id = ?;", update.getSql());
+        assertEquals(Arrays.asList("D'Ávila", null, 5L, 7), update.getParameters());
+    }
+
     @ParameterizedTest
     @MethodSource("invalidRows")
     void rejectsInvalidInsertRows (List<Row> rows) {

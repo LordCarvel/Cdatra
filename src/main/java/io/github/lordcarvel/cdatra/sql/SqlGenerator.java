@@ -346,7 +346,7 @@ public class SqlGenerator {
         return sql.build();
     }
 
-    public String update (Table table, List<Row> rows, Row idRow) {
+    public SqlQuery update (Table table, List<Row> rows, Row idRow) {
 
         if (table == null) {
 
@@ -378,13 +378,13 @@ public class SqlGenerator {
             throw new IllegalArgumentException("Update ID value cannot be null");
         }
 
-        String idCondition = buildCondition(table, idRow, Operator.EQUAL);
-        List<String> seenColumns = new ArrayList<>();
-        StringBuilder sql = new StringBuilder();
+        validateTable(table);
 
-        sql.append("UPDATE ");
-        sql.append(table.getName());
-        sql.append(" SET ");
+        SqlBuilder sql = new SqlBuilder();
+
+        sql.append("UPDATE " + table.getName() + " SET ");
+
+        List<String> seenColumns = new ArrayList<>();
 
         for (int i = 0; i < rows.size(); i++) {
 
@@ -395,7 +395,7 @@ public class SqlGenerator {
                 throw new IllegalArgumentException("Update row cannot be null");
             }
 
-            String assignment = buildCondition(table, row, Operator.EQUAL);
+            appendAssignment(sql, table, row);
 
             if (row.getColumnName().equalsIgnoreCase(idRow.getColumnName())) {
 
@@ -420,15 +420,6 @@ public class SqlGenerator {
 
             seenColumns.add(row.getColumnName());
 
-            if (row.getValue() == null) {
-
-                sql.append(row.getColumnName());
-                sql.append(" = NULL");
-            } else {
-
-                sql.append(assignment);
-            }
-
             if (i < rows.size() - 1) {
 
                 sql.append(", ");
@@ -436,10 +427,10 @@ public class SqlGenerator {
         }
 
         sql.append(" WHERE ");
-        sql.append(idCondition);
+        appendCondition(sql, table, idRow, Operator.EQUAL);
         sql.append(";");
 
-        return sql.toString();
+        return sql.build();
     }
 
     public SqlQuery delete (Table table, Row idRow) {
@@ -835,5 +826,50 @@ public class SqlGenerator {
             sql.append(" " + sqlOperator + " ");
             sql.appendParameter(value);
         }
+    }
+
+    private void appendAssignment (SqlBuilder sql, Table table, Row row) {
+
+        if (row.getColumnName() == null || row.getColumnName().isBlank()) {
+
+            throw new IllegalArgumentException("Update column name cannot be null or blank");
+        }
+
+        boolean columnFound = false;
+        SqlType columnType = null;
+
+        for (ColumnDefinition columnDefinition : table.getColumnDefinitions()) {
+
+            if (row.getColumnName().equalsIgnoreCase(columnDefinition.getName())) {
+
+                columnFound = true;
+                columnType = typeMapper.map(columnDefinition.getType());
+            }
+        }
+
+        if (!columnFound) {
+
+            throw new IllegalArgumentException("Column not found in table: " + row.getColumnName());
+        }
+
+        Object value = row.getValue();
+
+        if (value != null) {
+
+            SqlType sqlType = typeMapper.map(value.getClass());
+
+            if (sqlType != columnType) {
+
+                throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
+            }
+
+            if (value instanceof Double && !Double.isFinite((Double) value)) {
+
+                throw new IllegalArgumentException("Non-finite value for column: " + row.getColumnName());
+            }
+        }
+
+        sql.append(row.getColumnName() + " = ");
+        sql.appendParameter(value);
     }
 }

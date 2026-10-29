@@ -180,14 +180,17 @@ public class Repository<T> {
 
         if (rows.isEmpty()) {
 
-            sqlGenerator.selectById(table, idRow);
+            if (idRow.getValue() == null) {
+
+                throw new IllegalArgumentException("Update ID value cannot be null");
+            }
 
             return;
         }
 
-        String sql = sqlGenerator.update(table, rows, idRow);
+        SqlQuery query = sqlGenerator.update(table, rows, idRow);
 
-        databaseAdapter.execute(new SqlQuery(sql, List.of()));
+        databaseAdapter.execute(query);
     }
 
     public void delete (T entity) throws IllegalAccessException, SQLException {
