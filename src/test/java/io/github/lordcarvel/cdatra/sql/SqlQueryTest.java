@@ -61,17 +61,22 @@ class SqlQueryTest {
         SqlQuery selectBy = generator.selectBy(table, new Row("name", value), Operator.EQUAL);
         assertEquals("SELECT * FROM people WHERE name = ?;", selectBy.getSql());
         assertEquals(List.of(value), selectBy.getParameters());
-        assertEquals("SELECT * FROM people WHERE name = 'D''Ávila; SELECT * FROM people WHERE ''x''=''x'' --' AND id > 1;",
-                generator.selectByConditions(table, List.of(new QueryCondition("name", value, Operator.EQUAL),
-                        new QueryCondition("id", 1, Operator.GREATER_THAN))));
+        SqlQuery byConditions = generator.selectByConditions(table, List.of(new QueryCondition("name", value, Operator.EQUAL),
+                new QueryCondition("id", 1, Operator.GREATER_THAN)));
+        assertEquals("SELECT * FROM people WHERE name = ? AND id > ?;", byConditions.getSql());
+        assertEquals(List.of(value, 1), byConditions.getParameters());
     }
 
     @Test
     void combinesConditionsAndLogicalFiltersWithoutMutatingInputs () {
 
         var conditions = List.of(new QueryCondition("id", 1, Operator.GREATER_THAN), new QueryCondition("name", "Carvel", Operator.EQUAL));
-        assertEquals("SELECT * FROM people WHERE id > 1 AND name = 'Carvel';", generator.selectByConditions(table, conditions));
-        assertEquals("SELECT * FROM people WHERE id > 1;", generator.selectByConditions(table, List.of(conditions.get(0))));
+        SqlQuery both = generator.selectByConditions(table, conditions);
+        assertEquals("SELECT * FROM people WHERE id > ? AND name = ?;", both.getSql());
+        assertEquals(List.of(1, "Carvel"), both.getParameters());
+        SqlQuery single = generator.selectByConditions(table, List.of(conditions.get(0)));
+        assertEquals("SELECT * FROM people WHERE id > ?;", single.getSql());
+        assertEquals(List.of(1), single.getParameters());
         var filters = List.of(new QueryFilter(conditions.get(0), null), new QueryFilter(conditions.get(1), LogicalOperator.OR));
         assertEquals("SELECT * FROM people WHERE id > 1 OR name = 'Carvel';", generator.selectByFilters(table, filters));
         assertEquals("SELECT * FROM people WHERE id > 1 AND name = 'Carvel';",

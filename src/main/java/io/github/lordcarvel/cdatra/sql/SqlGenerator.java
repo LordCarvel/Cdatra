@@ -488,7 +488,7 @@ public class SqlGenerator {
         return sql.build();
     }
 
-    public String selectByConditions (Table table, List<QueryCondition> conditions) {
+    public SqlQuery selectByConditions (Table table, List<QueryCondition> conditions) {
 
         if (table == null) {
 
@@ -507,11 +507,9 @@ public class SqlGenerator {
 
         validateTable(table);
 
-        StringBuilder sql = new StringBuilder();
+        SqlBuilder sql = new SqlBuilder();
 
-        sql.append("SELECT * FROM ");
-        sql.append(table.getName());
-        sql.append(" WHERE ");
+        sql.append("SELECT * FROM " + table.getName() + " WHERE ");
 
         for (int i = 0; i < conditions.size();) {
 
@@ -523,9 +521,7 @@ public class SqlGenerator {
             }
 
             Row row = new Row(condition.getColumnName(), condition.getValue());
-            String conditionSql = buildCondition(table, row, condition.getOperator());
-
-            sql.append(conditionSql);
+            appendCondition(sql, table, row, condition.getOperator());
 
             if (i < conditions.size() - 1) {
 
@@ -537,7 +533,7 @@ public class SqlGenerator {
 
         sql.append(";");
 
-        return sql.toString();
+        return sql.build();
     }
 
     public String selectByFilters (Table table, List<QueryFilter> filters) {
