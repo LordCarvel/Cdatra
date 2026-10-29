@@ -30,7 +30,7 @@ public class Repository<T> {
     private final Analysis analysis = new Analysis();
     private final ValueAnalysis valueAnalysis = new ValueAnalysis();
     private final SchemaBuilder schemaBuilder = new SchemaBuilder();
-    private final SqlGenerator sqlGenerator = new SqlGenerator();
+    private final SqlGenerator sqlGenerator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Repository (Class<T> type, Connection connection) {
@@ -52,6 +52,8 @@ public class Repository<T> {
 
         this.type = type;
         this.databaseAdapter = databaseAdapter;
+
+        this.sqlGenerator = new SqlGenerator(databaseAdapter.dialect());
     }
 
     public void createTable () throws SQLException {

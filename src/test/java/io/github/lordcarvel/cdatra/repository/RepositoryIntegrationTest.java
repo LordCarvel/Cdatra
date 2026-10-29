@@ -2,10 +2,14 @@ package io.github.lordcarvel.cdatra.repository;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
 import io.github.lordcarvel.cdatra.example.User;
+import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.query.LogicalOperator;
 import io.github.lordcarvel.cdatra.query.Operator;
 import io.github.lordcarvel.cdatra.query.QueryCondition;
 import io.github.lordcarvel.cdatra.query.QueryFilter;
+import io.github.lordcarvel.cdatra.sql.SqlQuery;
+import io.github.lordcarvel.cdatra.sql.dialect.D1Dialect;
+import io.github.lordcarvel.cdatra.sql.dialect.SqlDialect;
 import io.github.lordcarvel.cdatra.support.TestEntities.Record;
 import io.github.lordcarvel.cdatra.support.TestEntities;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +23,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -421,6 +426,58 @@ class RepositoryIntegrationTest {
             var mixed = List.of(new QueryFilter(andConditions.get(0), null), new QueryFilter(andConditions.get(1), LogicalOperator.OR),
                     new QueryFilter(new QueryCondition("active", active, Operator.EQUAL), LogicalOperator.AND));
             assertEquals(expectedMixed, ids(repository.findByFilters(mixed)), "OR/AND iteration " + i);
+        }
+    }
+
+    @Test
+    void createsTablesWithTheAdapterDialect () throws Exception {
+
+        RecordingAdapter adapter = new RecordingAdapter(new D1Dialect());
+
+        new Repository<>(Record.class, adapter).createTable();
+
+        assertEquals("CREATE TABLE records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, total INTEGER, active INTEGER, score REAL, optional INTEGER);", adapter.executed.get(0).getSql());
+    }
+
+    @Test
+    void rejectsAdapterWithoutDialect () {
+
+        assertThrows(IllegalArgumentException.class, () -> new Repository<>(Record.class, new RecordingAdapter(null)));
+    }
+
+    private static class RecordingAdapter implements DatabaseAdapter {
+
+        private final SqlDialect dialect;
+
+        private final List<SqlQuery> executed = new ArrayList<>();
+
+        RecordingAdapter (SqlDialect dialect) {
+
+            this.dialect = dialect;
+        }
+
+        @Override
+        public void execute (SqlQuery query) {
+
+            executed.add(query);
+        }
+
+        @Override
+        public List<List<Row>> query (SqlQuery query) {
+
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object executeAndReturnGeneratedKey (SqlQuery query) {
+
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SqlDialect dialect () {
+
+            return dialect;
         }
     }
 
