@@ -55,6 +55,11 @@ public class JsonReader {
             return false;
         }
 
+        if (position < text.length() && (text.charAt(position) == '-' || isDigit(text.charAt(position)))) {
+
+            return readNumber();
+        }
+
         throw new IllegalArgumentException("Unexpected JSON value at position " + position);
     }
 
@@ -69,5 +74,27 @@ public class JsonReader {
 
             position = position + 1;
         }
+    }
+
+    private boolean isDigit (char c) {
+
+        return c >= '0' && c <= '9';
+    }
+
+    private Object readNumber () {
+
+        int start = position;
+
+        if (text.charAt(position) == '-') {
+
+            position = position + 1;
+        }
+
+        while (position < text.length() && isDigit(text.charAt(position))) {
+
+            position = position + 1;
+        }
+
+        return Long.parseLong(text.substring(start, position));
     }
 }

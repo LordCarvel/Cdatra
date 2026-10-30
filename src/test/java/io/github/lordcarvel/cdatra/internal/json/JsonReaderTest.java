@@ -77,6 +77,48 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsIntegersAsLong () {
+
+        assertEquals(0L, new JsonReader("0").read());
+        assertEquals(7L, new JsonReader("7").read());
+        assertEquals(42L, new JsonReader("42").read());
+        assertEquals(-12L, new JsonReader("-12").read());
+        assertEquals(9007199254740991L, new JsonReader("9007199254740991").read());
+    }
+
+    @Test
+    void readsTheLimitsOfLong () {
+
+        assertEquals(Long.MAX_VALUE, new JsonReader("9223372036854775807").read());
+        assertEquals(Long.MIN_VALUE, new JsonReader("-9223372036854775808").read());
+    }
+
+    @Test
+    void readsIntegersThatDoNotStartAtPositionZero () {
+
+        assertEquals(12L, new JsonReader(" 12").read());
+        assertEquals(-12L, new JsonReader("\n  -12  ").read());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"12x", "1 2", "-1-2", "12null"})
+    void rejectsContentAfterTheNumber (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"-", "--1", "-x", "+1", "9223372036854775808", "-9223372036854775809"})
+    void rejectsTextThatIsNotAnInteger (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
