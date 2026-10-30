@@ -90,7 +90,7 @@ public class JsonReader {
             position = position + 1;
         }
 
-        skipDigits();
+        requireDigits();
 
         boolean isDecimal = false;
 
@@ -100,7 +100,7 @@ public class JsonReader {
 
             position = position + 1;
 
-            skipDigits();
+            requireDigits();
         }
 
         if (position < text.length() && (text.charAt(position) == 'e' || text.charAt(position) == 'E')) {
@@ -114,7 +114,7 @@ public class JsonReader {
                 position = position + 1;
             }
 
-            skipDigits();
+            requireDigits();
         }
 
         String number = text.substring(start, position);
@@ -132,6 +132,18 @@ public class JsonReader {
         while (position < text.length() && isDigit(text.charAt(position))) {
 
             position = position + 1;
+        }
+    }
+
+    private void requireDigits () {
+
+        int start = position;
+
+        skipDigits();
+
+        if (position == start) {
+
+            throw new IllegalArgumentException("Expected a digit at position " + position);
         }
     }
 }

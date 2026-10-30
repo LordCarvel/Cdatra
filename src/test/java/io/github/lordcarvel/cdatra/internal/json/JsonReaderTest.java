@@ -2,6 +2,7 @@ package io.github.lordcarvel.cdatra.internal.json;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -175,6 +176,29 @@ class JsonReaderTest {
         JsonReader reader = new JsonReader(text);
 
         assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "-|1",
+            "-.5|1",
+            "-e2|1",
+            "1.|2",
+            "1.e2|2",
+            "-1.|3",
+            "2e|2",
+            "2E|2",
+            "2e+|3",
+            "2e-|3",
+            "1.5e|4"
+    })
+    void requiresDigitsAndNamesWhereTheyWereMissing (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected a digit at position " + position, error.getMessage());
     }
 
     @Test
