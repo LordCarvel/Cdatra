@@ -18,7 +18,11 @@ public class JsonReader {
 
     public Object read () {
 
+        skipWhitespace();
+
         Object value = readValue();
+
+        skipWhitespace();
 
         if (position < text.length()) {
 
@@ -52,5 +56,18 @@ public class JsonReader {
         }
 
         throw new IllegalArgumentException("Unexpected JSON value at position " + position);
+    }
+
+    private boolean isWhitespace (char c) {
+
+        return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    }
+
+    private void skipWhitespace () {
+
+        while (position < text.length() && isWhitespace(text.charAt(position))) {
+
+            position = position + 1;
+        }
     }
 }

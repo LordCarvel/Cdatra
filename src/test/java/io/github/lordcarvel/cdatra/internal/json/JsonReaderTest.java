@@ -41,6 +41,42 @@ class JsonReaderTest {
     }
 
     @Test
+    void skipsWhitespaceAroundTheValue () {
+
+        assertEquals(true, new JsonReader(" true").read());
+        assertEquals(true, new JsonReader("true ").read());
+        assertEquals(false, new JsonReader(" \t\r\n false \r\n\t ").read());
+        assertNull(new JsonReader("\n\n  null\n").read());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {" ", "   ", "\n", "\t\r\n"})
+    void rejectsTextWithOnlyWhitespace (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\fnull", "null\f", " null", "null "})
+    void rejectsWhitespaceThatJsonDoesNotAllow (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"null true", "true\nfalse", "nu ll"})
+    void whitespaceDoesNotJoinTwoValues (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
