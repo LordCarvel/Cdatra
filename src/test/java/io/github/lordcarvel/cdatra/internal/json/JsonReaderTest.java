@@ -151,6 +151,33 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsExponentsAsDouble () {
+
+        assertEquals(2000.0, new JsonReader("2e3").read());
+        assertEquals(2000.0, new JsonReader("2E3").read());
+        assertEquals(2000.0, new JsonReader("2e+3").read());
+        assertEquals(0.005, new JsonReader("5e-3").read());
+        assertEquals(150.0, new JsonReader("1.5e2").read());
+        assertEquals(-100.0, new JsonReader("-1e2").read());
+        assertEquals(0.0015, new JsonReader(" 1.5E-3 ").read());
+    }
+
+    @Test
+    void exponentWithWholeResultIsStillDouble () {
+
+        assertInstanceOf(Double.class, new JsonReader("2e3").read());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2e", "2E", "2e+", "2e-", "2ex", "2e3e4", "2e3.5", "e5"})
+    void rejectsContentThatDoesNotFormAnExponent (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");

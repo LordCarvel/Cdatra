@@ -103,6 +103,20 @@ public class JsonReader {
             skipDigits();
         }
 
+        if (position < text.length() && (text.charAt(position) == 'e' || text.charAt(position) == 'E')) {
+
+            isDecimal = true;
+
+            position = position + 1;
+
+            if (position < text.length() && (text.charAt(position) == '+' || text.charAt(position) == '-')) {
+
+                position = position + 1;
+            }
+
+            skipDigits();
+        }
+
         String number = text.substring(start, position);
 
         if (isDecimal) {
