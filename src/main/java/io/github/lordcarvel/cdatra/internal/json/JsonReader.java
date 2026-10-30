@@ -60,6 +60,11 @@ public class JsonReader {
             return readNumber();
         }
 
+        if (text.startsWith("\"", position)) {
+
+            return readString();
+        }
+
         throw new IllegalArgumentException("Unexpected JSON value at position " + position);
     }
 
@@ -163,5 +168,32 @@ public class JsonReader {
 
             throw new IllegalArgumentException("Expected a digit at position " + position);
         }
+    }
+
+    private String readString () {
+
+        int start = position;
+
+        position = position + 1;
+
+        StringBuilder result = new StringBuilder();
+
+        while (position < text.length()) {
+
+            char c = text.charAt(position);
+
+            if (c == '"') {
+
+                position = position + 1;
+
+                return result.toString();
+            }
+
+            result.append(c);
+
+            position = position + 1;
+        }
+
+        throw new IllegalArgumentException("Unterminated string at position " + start);
     }
 }

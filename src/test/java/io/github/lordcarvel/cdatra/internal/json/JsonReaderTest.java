@@ -264,6 +264,67 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsStrings () {
+
+        assertEquals("", new JsonReader("\"\"").read());
+        assertEquals("ab", new JsonReader("\"ab\"").read());
+        assertEquals("hello world", new JsonReader("\"hello world\"").read());
+        assertEquals("ação ✓", new JsonReader("\"ação ✓\"").read());
+    }
+
+    @Test
+    void keepsWhitespaceInsideTheString () {
+
+        assertEquals("  ab  ", new JsonReader("\"  ab  \"").read());
+    }
+
+    @Test
+    void readsStringsThatDoNotStartAtPositionZero () {
+
+        assertEquals("ab", new JsonReader(" \"ab\"").read());
+        assertEquals("ab", new JsonReader("\n  \"ab\"  ").read());
+    }
+
+    @Test
+    void textBetweenQuotesIsAStringEvenWhenItLooksLikeAnotherValue () {
+
+        assertEquals("null", new JsonReader("\"null\"").read());
+        assertEquals("true", new JsonReader("\"true\"").read());
+        assertEquals("12", new JsonReader("\"12\"").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'\"'|0",
+            "'\"ab'|0",
+            "' \"ab'|1",
+            "'  \"ab  '|2"
+    })
+    void rejectsUnterminatedStringsNamingWhereTheyStart (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated string at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'\"ab\"x'|4",
+            "'\"ab\" \"cd\"'|5",
+            "'\"\"\"\"'|2"
+    })
+    void rejectsContentAfterTheString (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected content at position " + position, error.getMessage());
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
