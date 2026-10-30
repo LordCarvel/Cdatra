@@ -90,6 +90,11 @@ public class JsonReader {
             position = position + 1;
         }
 
+        if (position + 1 < text.length() && text.charAt(position) == '0' && isDigit(text.charAt(position + 1))) {
+
+            throw new IllegalArgumentException("Leading zeros are not allowed at position " + position);
+        }
+
         requireDigits();
 
         boolean isDecimal = false;

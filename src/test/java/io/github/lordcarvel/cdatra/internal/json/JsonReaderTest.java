@@ -201,6 +201,42 @@ class JsonReaderTest {
         assertEquals("Expected a digit at position " + position, error.getMessage());
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "00|0",
+            "007|0",
+            "01.5|0",
+            "01e2|0",
+            "-01|1",
+            "-00|1",
+            "' 007'|1"
+    })
+    void rejectsLeadingZeros (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Leading zeros are not allowed at position " + position, error.getMessage());
+    }
+
+    @Test
+    void acceptsZeroWhenItIsNotALeadingZero () {
+
+        assertEquals(0L, new JsonReader("-0").read());
+        assertEquals(0.5, new JsonReader("0.5").read());
+        assertEquals(0.0, new JsonReader("0e1").read());
+        assertEquals(10L, new JsonReader("10").read());
+        assertEquals(100L, new JsonReader("100").read());
+        assertEquals(1.05, new JsonReader("1.05").read());
+    }
+
+    @Test
+    void zerosAreAllowedAtTheStartOfTheExponent () {
+
+        assertEquals(100000.0, new JsonReader("1e05").read());
+    }
+
     @Test
     void errorMessageNamesThePosition () {
 
