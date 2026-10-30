@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -119,6 +120,33 @@ class JsonWriterTest {
 
         assertThrows(IllegalArgumentException.class, () -> writer.write(numberKey));
         assertThrows(IllegalArgumentException.class, () -> writer.write(nullKey));
+    }
+
+    @Test
+    void rejectsNumbersThatDoNotExistInJson () {
+
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Double.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Double.NEGATIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Float.NaN));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Float.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Float.NEGATIVE_INFINITY));
+    }
+
+    @Test
+    void rejectsNonFiniteNumbersAtAnyDepth () {
+
+        assertThrows(IllegalArgumentException.class, () -> writer.write(List.of(1, Double.NaN)));
+        assertThrows(IllegalArgumentException.class, () -> writer.write(Map.of("a", Float.POSITIVE_INFINITY)));
+    }
+
+    @Test
+    void acceptsFiniteFloatsAndHugeIntegers () {
+
+        BigInteger huge = BigInteger.TEN.pow(400);
+
+        assertEquals("1.5", writer.write(1.5f));
+        assertEquals(huge.toString(), writer.write(huge));
     }
 
     @Test

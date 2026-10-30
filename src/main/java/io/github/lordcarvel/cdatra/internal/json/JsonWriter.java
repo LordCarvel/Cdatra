@@ -16,6 +16,14 @@ public class JsonWriter {
 
     private void writeValue (StringBuilder json, Object value) {
 
+        if (value instanceof Number) {
+
+            if ((value instanceof Double || value instanceof Float) && !Double.isFinite(((Number) value).doubleValue())) {
+
+                throw new IllegalArgumentException("JSON numbers must be finite: " + value);
+            }
+        }
+
         if (value == null) {
 
             json.append("null");
