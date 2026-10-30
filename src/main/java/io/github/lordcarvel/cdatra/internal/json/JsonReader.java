@@ -90,11 +90,34 @@ public class JsonReader {
             position = position + 1;
         }
 
+        skipDigits();
+
+        boolean isDecimal = false;
+
+        if (position < text.length() && text.charAt(position) == '.') {
+
+            isDecimal = true;
+
+            position = position + 1;
+
+            skipDigits();
+        }
+
+        String number = text.substring(start, position);
+
+        if (isDecimal) {
+
+            return Double.parseDouble(number);
+        }
+
+        return Long.parseLong(number);
+    }
+
+    private void skipDigits () {
+
         while (position < text.length() && isDigit(text.charAt(position))) {
 
             position = position + 1;
         }
-
-        return Long.parseLong(text.substring(start, position));
     }
 }

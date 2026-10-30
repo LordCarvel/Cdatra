@@ -119,6 +119,38 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsDecimalsAsDouble () {
+
+        assertEquals(1.5, new JsonReader("1.5").read());
+        assertEquals(-0.25, new JsonReader("-0.25").read());
+        assertEquals(10.125, new JsonReader("10.125").read());
+        assertEquals(0.0, new JsonReader("0.0").read());
+    }
+
+    @Test
+    void readsWholeDecimalsAsDoubleAndNotAsLong () {
+
+        assertInstanceOf(Double.class, new JsonReader("1.0").read());
+        assertInstanceOf(Long.class, new JsonReader("1").read());
+    }
+
+    @Test
+    void readsDecimalsThatDoNotStartAtPositionZero () {
+
+        assertEquals(1.5, new JsonReader(" 1.5").read());
+        assertEquals(-1.5, new JsonReader("\n  -1.5  ").read());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1.2.3", "1.5x", "1.5 2", ".5"})
+    void rejectsContentThatDoesNotFormADecimal (String text) {
+
+        JsonReader reader = new JsonReader(text);
+
+        assertThrows(IllegalArgumentException.class, reader::read);
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
