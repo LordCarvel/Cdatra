@@ -237,6 +237,32 @@ class JsonReaderTest {
         assertEquals(100000.0, new JsonReader("1e05").read());
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "9223372036854775808|0",
+            "-9223372036854775809|0",
+            "99999999999999999999999999|0",
+            "1e400|0",
+            "-1e400|0",
+            "1.5e999|0",
+            "' 1e400'|1",
+            "'  9223372036854775808'|2"
+    })
+    void rejectsNumbersOutOfRangeNamingWhereTheyStart (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Number out of range at position " + position, error.getMessage());
+    }
+
+    @Test
+    void readsTheLargestFiniteDouble () {
+
+        assertEquals(Double.MAX_VALUE, new JsonReader("1.7976931348623157e308").read());
+    }
+
     @Test
     void errorMessageNamesThePosition () {
 

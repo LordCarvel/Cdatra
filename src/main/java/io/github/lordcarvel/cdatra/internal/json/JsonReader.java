@@ -126,10 +126,23 @@ public class JsonReader {
 
         if (isDecimal) {
 
-            return Double.parseDouble(number);
+            double value = Double.parseDouble(number);
+
+            if (!Double.isFinite(value)) {
+
+                throw new IllegalArgumentException("Number out of range at position " + start);
+            }
+
+            return value;
         }
 
-        return Long.parseLong(number);
+        try {
+
+            return Long.parseLong(number);
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException("Number out of range at position " + start);
+        }
     }
 
     private void skipDigits () {
