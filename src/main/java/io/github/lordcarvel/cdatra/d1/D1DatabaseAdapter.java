@@ -24,6 +24,10 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
 
     private static final long MAX_SAFE_INTEGER = 9007199254740991L;
 
+    private static final String QUERY_ROUTE = "/v1/query";
+
+    private static final String EXECUTE_ROUTE = "/v1/execute";
+
     private final String url;
 
     private final String secret;
@@ -51,13 +55,13 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     @Override
     public void execute (SqlQuery query) {
 
-        readResult(send(query));
+        readResult(send(EXECUTE_ROUTE, query));
     }
 
     @Override
     public List<List<Row>> query (SqlQuery query) {
 
-        Map<?, ?> result = readResult(send(query));
+        Map<?, ?> result = readResult(send(QUERY_ROUTE, query));
 
         List<?> columns = asList(result.get("columns"), "columns");
 
@@ -92,7 +96,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     @Override
     public Object executeAndReturnGeneratedKey (SqlQuery query) {
 
-        Map<?, ?> result = readResult(send(query));
+        Map<?, ?> result = readResult(send(EXECUTE_ROUTE, query));
 
         Map<?, ?> meta = asMap(result.get("meta"), "meta");
 
@@ -105,7 +109,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
         return new D1Dialect();
     }
 
-    private HttpResponse<String> send (SqlQuery query) {
+    private HttpResponse<String> send (String route, SqlQuery query) {
 
         if (query == null) {
 
@@ -118,7 +122,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
         body.put("params", toWorkerValues(query.getParameters()));
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/v1/query"))
+                .uri(URI.create(url + route))
                 .timeout(Duration.ofSeconds(30))
                 .header("Authorization", "Bearer " + secret)
                 .header("Content-Type", "application/json")

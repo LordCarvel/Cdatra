@@ -92,12 +92,34 @@ class D1DatabaseAdapterWorkerTest {
     }
 
     @Test
-    void postsToTheQueryRouteWithTheSecret () {
+    void executePostsToTheExecuteRouteWithTheSecret () {
 
         adapter.execute(sql("DELETE FROM users"));
 
         assertEquals("POST", method);
+        assertEquals("/v1/execute", path);
+        assertEquals("Bearer " + SECRET, authorization);
+        assertEquals("application/json", contentType);
+    }
+
+    @Test
+    void queryPostsToTheQueryRouteWithTheSecret () {
+
+        adapter.query(sql("SELECT id FROM users"));
+
+        assertEquals("POST", method);
         assertEquals("/v1/query", path);
+        assertEquals("Bearer " + SECRET, authorization);
+        assertEquals("application/json", contentType);
+    }
+
+    @Test
+    void generatedKeyPostsToTheExecuteRouteWithTheSecret () {
+
+        adapter.executeAndReturnGeneratedKey(sql("INSERT INTO users (name) VALUES (?)", "Ana"));
+
+        assertEquals("POST", method);
+        assertEquals("/v1/execute", path);
         assertEquals("Bearer " + SECRET, authorization);
         assertEquals("application/json", contentType);
     }
