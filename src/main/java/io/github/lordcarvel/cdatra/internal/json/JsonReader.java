@@ -148,38 +148,50 @@ public class JsonReader {
             return results;
         }
 
-        if (position >= text.length()) {
+        while (position < text.length()) {
 
-            throw new IllegalArgumentException("Unterminated map at position " + start);
-        }
+            if (text.charAt(position) != '"') {
 
-        if (text.charAt(position) != '"') {
+                throw new IllegalArgumentException("Expected a string key at position " + position);
+            }
 
-            throw new IllegalArgumentException("Expected a string key at position " + position);
-        }
+            String key = readString();
 
-        String key = readString();
+            skipWhitespace();
 
-        skipWhitespace();
+            if (position >= text.length() || text.charAt(position) != ':') {
 
-        if (position >= text.length() || text.charAt(position) != ':') {
-
-            throw new IllegalArgumentException("Expected ':' at position " + position);
-        }
-
-        position = position + 1;
-
-        skipWhitespace();
-
-        results.put(key, readValue());
-
-        skipWhitespace();
-
-        if (position < text.length() && text.charAt(position) == '}') {
+                throw new IllegalArgumentException("Expected ':' at position " + position);
+            }
 
             position = position + 1;
 
-            return results;
+            skipWhitespace();
+
+            results.put(key, readValue());
+
+            skipWhitespace();
+
+            if (position < text.length() && text.charAt(position) == '}') {
+
+                position = position + 1;
+
+                return results;
+            }
+
+            if (position >= text.length()) {
+
+                break;
+            }
+
+            if (text.charAt(position) != ',') {
+
+                throw new IllegalArgumentException("Expected ',' or '}' at position " + position);
+            }
+
+            position = position + 1;
+
+            skipWhitespace();
         }
 
         throw new IllegalArgumentException("Unterminated map at position " + start);

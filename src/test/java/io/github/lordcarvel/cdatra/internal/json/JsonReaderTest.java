@@ -854,6 +854,114 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsMapsWithSeveralPairs () {
+
+        assertEquals(Map.of("a", 1L, "b", 2L), new JsonReader("{\"a\":1,\"b\":2}").read());
+        assertEquals(Map.of("a", 1L, "b", "x", "c", true), new JsonReader("{ \"a\" : 1 , \"b\" : \"x\" , \"c\" : true }").read());
+    }
+
+    @Test
+    void keepsTheKeysInTheOrderTheyArrived () {
+
+        Map<?, ?> map = (Map<?, ?>) new JsonReader("{\"z\":1,\"a\":2,\"m\":3}").read();
+
+        assertEquals(List.of("z", "a", "m"), List.copyOf(map.keySet()));
+    }
+
+    @Test
+    void repeatedKeyKeepsTheLastValue () {
+
+        assertEquals(Map.of("a", 2L), new JsonReader("{\"a\":1,\"a\":2}").read());
+    }
+
+    @Test
+    void commaInsideAStringDoesNotSeparatePairs () {
+
+        assertEquals(Map.of("a,b", "c,d"), new JsonReader("{\"a,b\":\"c,d\"}").read());
+    }
+
+    @Test
+    void readsASuccessResponseFromTheWorker () {
+
+        String json = "{ \"ok\": true, \"result\": { \"columns\": [\"id\", \"name\"], "
+                + "\"rows\": [[1, \"Ana\"], [2, \"Bia\"]], \"meta\": { \"last_row_id\": 2 } } }";
+
+        Map<String, Object> result = Map.of(
+                "columns", List.of("id", "name"),
+                "rows", List.of(List.of(1L, "Ana"), List.of(2L, "Bia")),
+                "meta", Map.of("last_row_id", 2L));
+
+        assertEquals(Map.of("ok", true, "result", result), new JsonReader(json).read());
+    }
+
+    @Test
+    void readsAnErrorResponseFromTheWorker () {
+
+        String json = "{ \"ok\": false, \"error\": { \"code\": \"SQL_ERROR\", \"message\": \"no such table\" } }";
+
+        Map<String, Object> error = Map.of("code", "SQL_ERROR", "message", "no such table");
+
+        assertEquals(Map.of("ok", false, "error", error), new JsonReader(json).read());
+    }
+
+    @Test
+    void readsWhatJsonWriterWrites () {
+
+        Object original = Map.of("sql", "SELECT 1", "params", Arrays.asList(1L, "Ana", null, 1.5, true));
+
+        String json = new JsonWriter().write(original);
+
+        assertEquals(original, new JsonReader(json).read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{\"a\": 1 \"b\": 2}'|8",
+            "'{\"a\":1:2}'|6",
+            "'{\"a\":[1]]'|8"
+    })
+    void rejectsPairsWithoutACommaBetweenThem (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected ',' or '}' at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{\"a\":1,}'|7",
+            "'{\"a\":1, }'|8",
+            "'{,}'|1",
+            "'{\"a\":1,,\"b\":2}'|7"
+    })
+    void rejectsCommasWithoutAPair (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected a string key at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{\"a\":1,'|0",
+            "'{\"a\":1, '|0",
+            "'{\"a\":1,\"b\":2'|0",
+            "'{\"a\":{\"b\":1,'|5"
+    })
+    void rejectsMapsThatEndAfterAComma (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated map at position " + position, error.getMessage());
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
