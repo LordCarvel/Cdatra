@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -715,8 +716,10 @@ class JsonReaderTest {
             "'{'|0",
             "'{  '|0",
             "' {'|1",
-            "'{]'|0",
-            "'[{'|1"
+            "'[{'|1",
+            "'{\"a\":1'|0",
+            "'{\"a\":1 '|0",
+            "' {\"a\":1'|1"
     })
     void rejectsUnterminatedMapsNamingWhereTheyStart (String text, int position) {
 
@@ -745,6 +748,109 @@ class JsonReaderTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
 
         assertEquals("Unexpected JSON value at position 0", error.getMessage());
+    }
+
+    @Test
+    void readsMapsWithOnePairOfAnyValueType () {
+
+        assertEquals(Map.of("a", 1L), new JsonReader("{\"a\": 1}").read());
+        assertEquals(Map.of("a", "b"), new JsonReader("{\"a\": \"b\"}").read());
+        assertEquals(Map.of("ok", true), new JsonReader("{\"ok\": true}").read());
+        assertEquals(Collections.singletonMap("a", null), new JsonReader("{\"a\": null}").read());
+    }
+
+    @Test
+    void readsMapsAndListsInsideEachOther () {
+
+        assertEquals(Map.of("a", Map.of("b", 1L)), new JsonReader("{\"a\": {\"b\": 1}}").read());
+        assertEquals(Map.of("a", List.of(1L, 2L)), new JsonReader("{\"a\": [1, 2]}").read());
+        assertEquals(List.of(Map.of("a", 1L)), new JsonReader("[{\"a\": 1}]").read());
+        assertEquals(Map.of("a", Map.of()), new JsonReader("{\"a\": {}}").read());
+    }
+
+    @Test
+    void acceptsWhitespaceAroundThePair () {
+
+        assertEquals(Map.of("a", 1L), new JsonReader("{\"a\":1}").read());
+        assertEquals(Map.of("a", 1L), new JsonReader("{ \"a\" : 1 }").read());
+        assertEquals(Map.of("a", 1L), new JsonReader("{\n  \"a\": 1\n}").read());
+    }
+
+    @Test
+    void readsKeysLikeAnyOtherString () {
+
+        assertEquals(Map.of("", 1L), new JsonReader("{\"\": 1}").read());
+        assertEquals(Map.of("a\nb", 1L), new JsonReader("{\"a\\nb\": 1}").read());
+        assertEquals(Map.of("a:b", 1L), new JsonReader("{\"a:b\": 1}").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{a: 1}'|1",
+            "'{1: 2}'|1",
+            "'{null: 1}'|1",
+            "'{]'|1",
+            "'{ a}'|2"
+    })
+    void rejectsKeysThatAreNotStrings (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected a string key at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{\"a\" 1}'|5",
+            "'{\"a\",1}'|4",
+            "'{\"a\"}'|4",
+            "'{\"a\"'|4",
+            "'{\"a\"  '|6"
+    })
+    void rejectsKeysWithoutAColon (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected ':' at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{\"a\":}'|5",
+            "'{\"a\":'|5",
+            "'{\"a\": x}'|6"
+    })
+    void rejectsPairsWithoutAValidValue (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected JSON value at position " + position, error.getMessage());
+    }
+
+    @Test
+    void unterminatedKeyIsAnUnterminatedString () {
+
+        JsonReader reader = new JsonReader("{\"a");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated string at position 1", error.getMessage());
+    }
+
+    @Test
+    void rejectsContentAfterTheMapWithAPair () {
+
+        JsonReader reader = new JsonReader("{\"a\":1}x");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected content at position 7", error.getMessage());
     }
 
     @Test
