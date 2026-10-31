@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -694,6 +695,56 @@ class JsonReaderTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
 
         assertEquals("Unterminated list at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{ }", "{ \n\t }", " {}", "\n  { }  "})
+    void readsEmptyMaps (String text) {
+
+        assertEquals(Map.of(), new JsonReader(text).read());
+    }
+
+    @Test
+    void readsEmptyMapsInsideLists () {
+
+        assertEquals(List.of(Map.of(), Map.of()), new JsonReader("[{}, {}]").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'{'|0",
+            "'{  '|0",
+            "' {'|1",
+            "'{]'|0",
+            "'[{'|1"
+    })
+    void rejectsUnterminatedMapsNamingWhereTheyStart (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated map at position " + position, error.getMessage());
+    }
+
+    @Test
+    void rejectsContentAfterTheMap () {
+
+        JsonReader reader = new JsonReader("{}x");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected content at position 2", error.getMessage());
+    }
+
+    @Test
+    void closingBraceAloneIsNotAValue () {
+
+        JsonReader reader = new JsonReader("}");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected JSON value at position 0", error.getMessage());
     }
 
     @Test

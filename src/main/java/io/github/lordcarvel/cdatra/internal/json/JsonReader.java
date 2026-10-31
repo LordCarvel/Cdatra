@@ -1,7 +1,9 @@
 package io.github.lordcarvel.cdatra.internal.json;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JsonReader {
 
@@ -73,6 +75,11 @@ public class JsonReader {
             return readList();
         }
 
+        if (text.startsWith("{", position)) {
+
+            return readMap();
+        }
+
         throw new IllegalArgumentException("Unexpected JSON value at position " + position);
     }
 
@@ -122,6 +129,26 @@ public class JsonReader {
         }
 
         throw new IllegalArgumentException("Unterminated list at position " + start);
+    }
+
+    private Map<String, Object> readMap () {
+
+        int start = position;
+
+        position = position + 1;
+
+        Map<String, Object> results = new LinkedHashMap<>();
+
+        skipWhitespace();
+
+        if (position < text.length() && text.charAt(position) == '}') {
+
+            position = position + 1;
+
+            return results;
+        }
+
+        throw new IllegalArgumentException("Unterminated map at position " + start);
     }
 
     private boolean isWhitespace (char c) {
