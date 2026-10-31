@@ -1,14 +1,13 @@
 package io.github.lordcarvel.cdatra.d1;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.internal.json.JsonReader;
+import io.github.lordcarvel.cdatra.internal.json.JsonWriter;
 import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import io.github.lordcarvel.cdatra.sql.dialect.D1Dialect;
 import io.github.lordcarvel.cdatra.sql.dialect.SqlDialect;
-
-import io.github.lordcarvel.cdatra.exception.CdatraException;
-import io.github.lordcarvel.cdatra.internal.json.JsonWriter;
 
 import java.io.IOException;
 import java.net.URI;
@@ -18,15 +17,15 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Map;
-
 import java.util.List;
+import java.util.Map;
 
 public class D1DatabaseAdapter implements DatabaseAdapter {
 
     private static final long MAX_SAFE_INTEGER = 9007199254740991L;
 
     private final String url;
+
     private final String secret;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -176,7 +175,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
 
     private List<?> asList (Object value, String name) {
 
-        if (value instanceof List<?>) {
+        if (value instanceof List) {
 
             return (List<?>) value;
         }
