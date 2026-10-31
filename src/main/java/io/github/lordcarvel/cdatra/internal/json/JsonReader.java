@@ -205,6 +205,11 @@ public class JsonReader {
                 continue;
             }
 
+            if (isControl(c)) {
+
+                throw new IllegalArgumentException("Invalid control character at position " + position);
+            }
+
             result.append(c);
 
             position = position + 1;
@@ -246,5 +251,10 @@ public class JsonReader {
         }
 
         throw new IllegalArgumentException("Invalid escape at position " + position);
+    }
+
+    private boolean isControl (char c) {
+
+        return c < 32;
     }
 }

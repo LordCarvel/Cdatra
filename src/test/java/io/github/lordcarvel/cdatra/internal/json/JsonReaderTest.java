@@ -381,6 +381,44 @@ class JsonReaderTest {
         assertEquals("Invalid escape at position " + position, error.getMessage());
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 8, 9, 10, 12, 13, 27, 31})
+    void rejectsRawControlCharactersNamingWhereTheyAre (int code) {
+
+        JsonReader reader = new JsonReader("\"a" + (char) code + "b\"");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid control character at position 2", error.getMessage());
+    }
+
+    @Test
+    void controlCharacterPositionCountsFromTheStartOfTheText () {
+
+        JsonReader reader = new JsonReader("  \"ab\n\"");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid control character at position 5", error.getMessage());
+    }
+
+    @Test
+    void acceptsCharactersRightAfterTheControlRange () {
+
+        assertEquals("a b", new JsonReader("\"a b\"").read());
+        assertEquals("a\u007Fb", new JsonReader("\"a\u007Fb\"").read());
+    }
+
+    @Test
+    void rawControlCharacterAfterABackslashIsAnInvalidEscape () {
+
+        JsonReader reader = new JsonReader("\"a\\\nb\"");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid escape at position 3", error.getMessage());
+    }
+
     @Test
     void errorMessageNamesThePosition () {
 
