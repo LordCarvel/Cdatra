@@ -6,13 +6,28 @@ import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import io.github.lordcarvel.cdatra.sql.dialect.D1Dialect;
 import io.github.lordcarvel.cdatra.sql.dialect.SqlDialect;
 
+import io.github.lordcarvel.cdatra.exception.CdatraException;
+import io.github.lordcarvel.cdatra.internal.json.JsonWriter;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import java.util.List;
 
 public class D1DatabaseAdapter implements DatabaseAdapter {
 
     private final String url;
-
     private final String secret;
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    private final JsonWriter jsonWriter = new JsonWriter();
 
     public D1DatabaseAdapter (String url, String secret) {
 
@@ -33,7 +48,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     @Override
     public void execute (SqlQuery query) {
 
-        throw new UnsupportedOperationException("Not implemented yet");
+        send(query);
     }
 
     @Override
@@ -52,5 +67,39 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     public SqlDialect dialect () {
 
         return new D1Dialect();
+    }
+
+    private HttpResponse<String> send (SqlQuery query) {
+
+        if (query == null) {
+
+            throw new IllegalArgumentException("SQL query cannot be null");
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("sql", query.getSql());
+        body.put("params", query.getParameters());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url + "/v1/query"))
+                .timeout(Duration.ofSeconds(30))
+                .header("Authorization", "Bearer " + secret)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonWriter.write(body)))
+                .build();
+
+        try {
+
+            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+
+            throw new CdatraException("Failed to reach the D1 Worker", e);
+        } catch (InterruptedException e) {
+
+            Thread.currentThread().interrupt();
+
+            throw new CdatraException("Interrupted while calling the D1 Worker", e);
+        }
     }
 }
