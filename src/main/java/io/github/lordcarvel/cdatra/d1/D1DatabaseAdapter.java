@@ -1,6 +1,7 @@
 package io.github.lordcarvel.cdatra.d1;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
+import io.github.lordcarvel.cdatra.internal.json.JsonReader;
 import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import io.github.lordcarvel.cdatra.sql.dialect.D1Dialect;
@@ -48,7 +49,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     @Override
     public void execute (SqlQuery query) {
 
-        send(query);
+        readResult(send(query));
     }
 
     @Override
@@ -101,5 +102,39 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
 
             throw new CdatraException("Interrupted while calling the D1 Worker", e);
         }
+    }
+
+    private Map<?, ?> asMap (Object value, String name) {
+
+        if (value instanceof Map) {
+
+            return (Map<?, ?>) value;
+        }
+
+        throw new CdatraException("Invalid D1 Worker response: expected " + name);
+    }
+
+    private Map<?, ?> readResult (HttpResponse<String> response) {
+
+        Object parsed;
+
+        try {
+
+            parsed = new JsonReader(response.body()).read();
+        } catch (IllegalArgumentException e) {
+
+            throw new CdatraException("Invalid D1 Worker response (HTTP " + response.statusCode() + ")", e);
+        }
+
+        Map<?, ?> body = asMap(parsed, "a JSON object");
+
+        if (Boolean.TRUE.equals(body.get("ok"))) {
+
+            return asMap(body.get("result"), "result");
+        }
+
+        Map<?, ?> error = asMap(body.get("error"), "error");
+
+        throw new CdatraException(error.get("code") + ": " + error.get("message"));
     }
 }
