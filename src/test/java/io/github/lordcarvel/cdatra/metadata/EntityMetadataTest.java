@@ -62,6 +62,14 @@ class EntityMetadataTest {
     }
 
     @Test
+    void writesGeneratedValueFromTheLongThatD1Returns () throws Exception {
+
+        var generated = new TestEntities.Record();
+        values.setGeneratedValue(generated, 12L);
+        assertEquals(12, generated.id);
+    }
+
+    @Test
     void rejectsNullValuesAndIncompatibleGeneratedKeys () {
 
         assertThrows(IllegalArgumentException.class, () -> values.setGeneratedValue(null, 1));

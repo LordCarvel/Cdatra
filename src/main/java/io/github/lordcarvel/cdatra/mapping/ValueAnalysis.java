@@ -13,6 +13,8 @@ import java.util.List;
 
 public class ValueAnalysis {
 
+    private final ValueConverter valueConverter = new ValueConverter();
+
     public List<Row> analyze (Object value) throws IllegalAccessException {
 
         if (value == null) {
@@ -120,7 +122,7 @@ public class ValueAnalysis {
             if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class)) {
 
                 field.setAccessible(true);
-                field.set(value, generatedValue);
+                field.set(value, valueConverter.convert(generatedValue, field.getType()));
 
                 return;
             }

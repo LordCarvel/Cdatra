@@ -46,6 +46,38 @@ class ObjectMapperEdgeTest {
     }
 
     @Test
+    void mapsBoxedFieldsFromTheNumbersThatD1Returns () throws Exception {
+
+        var rows = List.of(new Row("integer_value", 7L), new Row("long_value", 8L),
+                new Row("boolean_value", 1L), new Row("double_value", 2L));
+        var entity = (Boxed) mapper.map(rows, Boxed.class);
+        assertEquals(7, entity.integerValue);
+        assertEquals(8L, entity.longValue);
+        assertTrue(entity.booleanValue);
+        assertEquals(2.0, entity.doubleValue);
+    }
+
+    @Test
+    void mapsPrimitiveFieldsFromTheNumbersThatD1Returns () throws Exception {
+
+        var rows = List.of(new Row("int_value", 7L), new Row("boolean_value", 0L), new Row("double_value", 2L));
+        var entity = (Primitives) mapper.map(rows, Primitives.class);
+        assertEquals(7, entity.intValue);
+        assertFalse(entity.booleanValue);
+        assertEquals(2.0, entity.doubleValue);
+    }
+
+    @Test
+    void rejectsNumbersThatDoNotFitTheField () {
+
+        var outOfRange = List.of(new Row("int_value", 2147483648L), new Row("boolean_value", 0L), new Row("double_value", 1.5));
+        assertThrows(IllegalArgumentException.class, () -> mapper.map(outOfRange, Primitives.class));
+
+        var notABoolean = List.of(new Row("int_value", 1L), new Row("boolean_value", 2L), new Row("double_value", 1.5));
+        assertThrows(IllegalArgumentException.class, () -> mapper.map(notABoolean, Primitives.class));
+    }
+
+    @Test
     void propagatesAnExceptionThrownByTheConstructor () {
 
         var error = assertThrows(InvocationTargetException.class, () -> mapper.map(List.of(new Row("label", "value")), FailingConstructor.class));
@@ -81,6 +113,17 @@ class ObjectMapperEdgeTest {
         @Column(columName = "double_value") public Double doubleValue;
 
         public Boxed () {
+
+        }
+    }
+
+    public static class Primitives {
+
+        @Column(columName = "int_value") public int intValue;
+        @Column(columName = "boolean_value") public boolean booleanValue;
+        @Column(columName = "double_value") public double doubleValue;
+
+        public Primitives () {
 
         }
     }

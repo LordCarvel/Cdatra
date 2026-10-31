@@ -13,6 +13,8 @@ import java.util.List;
 
 public class ObjectMapper {
 
+    private final ValueConverter valueConverter = new ValueConverter();
+
     public Object map (List<Row> rows, Class<?> type) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
         if (rows == null || rows.isEmpty()) {
@@ -81,7 +83,7 @@ public class ObjectMapper {
                     if (row.getColumnName().equalsIgnoreCase(column.columName())) {
 
                         field.setAccessible(true);
-                        field.set(object, row.getValue());
+                        field.set(object, valueConverter.convert(row.getValue(), field.getType()));
 
                         if (!mappedColumns.contains(column.columName())) {
 
