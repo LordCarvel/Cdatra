@@ -1,6 +1,7 @@
 package io.github.lordcarvel.cdatra.mapping;
 
 import io.github.lordcarvel.cdatra.annotation.Column;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.support.TestEntities;
 import org.junit.jupiter.api.Test;
 
@@ -80,21 +81,24 @@ class ObjectMapperEdgeTest {
     @Test
     void propagatesAnExceptionThrownByTheConstructor () {
 
-        var error = assertThrows(InvocationTargetException.class, () -> mapper.map(List.of(new Row("label", "value")), FailingConstructor.class));
-        assertInstanceOf(IllegalStateException.class, error.getCause());
-        assertEquals("constructor failed", error.getCause().getMessage());
+        var error = assertThrows(CdatraException.class, () -> mapper.map(List.of(new Row("label", "value")), FailingConstructor.class));
+        assertInstanceOf(InvocationTargetException.class, error.getCause());
+        assertInstanceOf(IllegalStateException.class, error.getCause().getCause());
+        assertEquals("constructor failed", error.getCause().getCause().getMessage());
     }
 
     @Test
     void requiresAnAccessibleNoArgumentConstructor () {
 
-        assertThrows(IllegalAccessException.class, () -> mapper.map(List.of(new Row("label", "value")), PrivateConstructor.class));
+        var error = assertThrows(CdatraException.class, () -> mapper.map(List.of(new Row("label", "value")), PrivateConstructor.class));
+        assertInstanceOf(IllegalAccessException.class, error.getCause());
     }
 
     @Test
     void rejectsAbstractEntityInstantiation () {
 
-        assertThrows(InstantiationException.class, () -> mapper.map(List.of(new Row("label", "value")), AbstractEntity.class));
+        var error = assertThrows(CdatraException.class, () -> mapper.map(List.of(new Row("label", "value")), AbstractEntity.class));
+        assertInstanceOf(InstantiationException.class, error.getCause());
     }
 
     @Test

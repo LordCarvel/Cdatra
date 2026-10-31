@@ -1,11 +1,11 @@
 package io.github.lordcarvel.cdatra.mapping;
 
 import io.github.lordcarvel.cdatra.annotation.Column;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.metadata.Analysis;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +15,7 @@ public class ObjectMapper {
 
     private final ValueConverter valueConverter = new ValueConverter();
 
-    public Object map (List<Row> rows, Class<?> type) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public Object map (List<Row> rows, Class<?> type) {
 
         if (rows == null || rows.isEmpty()) {
 
@@ -60,10 +60,19 @@ public class ObjectMapper {
             constructor = type.getDeclaredConstructor();
         } catch (NoSuchMethodException exception) {
 
-            throw new NoSuchMethodException("Mapped type requires a no-argument constructor: " + type.getName());
+            throw new CdatraException("Mapped type requires a no-argument constructor: " + type.getName(), exception);
         }
 
-        Object object = constructor.newInstance();
+        Object object;
+
+        try {
+
+            object = constructor.newInstance();
+        } catch (ReflectiveOperationException e) {
+
+            throw new CdatraException("Failed to create " + type.getName(), e);
+        }
+
         List<Field> fields = new ArrayList<>();
         List<String> mappedColumns = new ArrayList<>();
 
@@ -83,7 +92,14 @@ public class ObjectMapper {
                     if (row.getColumnName().equalsIgnoreCase(column.columName())) {
 
                         field.setAccessible(true);
-                        field.set(object, valueConverter.convert(row.getValue(), field.getType()));
+
+                        try {
+
+                            field.set(object, valueConverter.convert(row.getValue(), field.getType()));
+                        } catch (IllegalAccessException exception) {
+
+                            throw new CdatraException("Failed to set field " + field.getName(), exception);
+                        }
 
                         if (!mappedColumns.contains(column.columName())) {
 

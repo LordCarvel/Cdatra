@@ -3,6 +3,7 @@ package io.github.lordcarvel.cdatra.mapping;
 import io.github.lordcarvel.cdatra.annotation.Column;
 import io.github.lordcarvel.cdatra.annotation.GeneratedValue;
 import io.github.lordcarvel.cdatra.annotation.Id;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.metadata.Analysis;
 
 import java.lang.reflect.Field;
@@ -15,7 +16,7 @@ public class ValueAnalysis {
 
     private final ValueConverter valueConverter = new ValueConverter();
 
-    public List<Row> analyze (Object value) throws IllegalAccessException {
+    public List<Row> analyze (Object value) {
 
         if (value == null) {
 
@@ -47,17 +48,15 @@ public class ValueAnalysis {
                 }
 
                 Column column = field.getAnnotation(Column.class);
-                field.setAccessible(true);
-                Object fieldValue = field.get(value);
 
-                rows.add(new Row(column.columName(), fieldValue));
+                rows.add(new Row(column.columName(), readField(field, value)));
             }
         }
 
         return rows;
     }
 
-    public Row analyzeId (Object value) throws IllegalAccessException {
+    public Row analyzeId (Object value) {
 
         if (value == null) {
 
@@ -87,17 +86,15 @@ public class ValueAnalysis {
                 }
 
                 Column column = field.getAnnotation(Column.class);
-                field.setAccessible(true);
-                Object fieldValue = field.get(value);
 
-                return new Row(column.columName(), fieldValue);
+                return new Row(column.columName(), readField(field, value));
             }
         }
 
         throw new IllegalArgumentException("Entity does not contain an @Id field");
     }
 
-    public void setGeneratedValue (Object value, Object generatedValue) throws IllegalAccessException {
+    public void setGeneratedValue (Object value, Object generatedValue) {
 
         if (value == null) {
 
@@ -122,10 +119,30 @@ public class ValueAnalysis {
             if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class)) {
 
                 field.setAccessible(true);
-                field.set(value, valueConverter.convert(generatedValue, field.getType()));
+
+                try {
+
+                    field.set(value, valueConverter.convert(generatedValue, field.getType()));
+                } catch (IllegalAccessException exception) {
+
+                    throw new CdatraException("Failed to set field " + field.getName(), exception);
+                }
 
                 return;
             }
+        }
+    }
+
+    private Object readField (Field field, Object value) {
+
+        field.setAccessible(true);
+
+        try {
+
+            return field.get(value);
+        } catch (IllegalAccessException exception) {
+
+            throw new CdatraException("Failed to read field " + field.getName(), exception);
         }
     }
 }

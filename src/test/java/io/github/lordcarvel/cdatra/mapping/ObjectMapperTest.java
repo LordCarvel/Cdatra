@@ -2,6 +2,7 @@ package io.github.lordcarvel.cdatra.mapping;
 
 import io.github.lordcarvel.cdatra.annotation.Column;
 import io.github.lordcarvel.cdatra.example.User;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -88,9 +89,10 @@ class ObjectMapperTest {
     @Test
     void explainsMissingNoArgumentConstructor () {
 
-        var error = assertThrows(NoSuchMethodException.class, () -> mapper.map(List.of(new Row("id", 1)), NoDefaultConstructor.class));
+        var error = assertThrows(CdatraException.class, () -> mapper.map(List.of(new Row("id", 1)), NoDefaultConstructor.class));
         assertTrue(error.getMessage().contains("no-argument constructor"));
         assertTrue(error.getMessage().contains(NoDefaultConstructor.class.getName()));
+        assertInstanceOf(NoSuchMethodException.class, error.getCause());
     }
 
     public static class Nullable {
