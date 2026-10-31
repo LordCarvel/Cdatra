@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -55,13 +56,46 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
     @Override
     public List<List<Row>> query (SqlQuery query) {
 
-        throw new UnsupportedOperationException("Not implemented yet");
+        Map<?, ?> result = readResult(send(query));
+
+        List<?> columns = asList(result.get("columns"), "columns");
+
+        List<?> rows = asList(result.get("rows"), "rows");
+
+        List<List<Row>> records = new ArrayList<>();
+
+        for (Object row : rows) {
+
+            List<?> values = asList(row, "row");
+
+            if (values.size() != columns.size()) {
+
+                throw new CdatraException("Invalid D1 Worker response: row size does not match columns");
+            }
+
+            List<Row> record = new ArrayList<>();
+
+            for (int i = 0; i < columns.size(); ) {
+
+                record.add(new Row(String.valueOf(columns.get(i)), values.get(i)));
+
+                i = i + 1;
+            }
+
+            records.add(record);
+        }
+
+        return records;
     }
 
     @Override
     public Object executeAndReturnGeneratedKey (SqlQuery query) {
 
-        throw new UnsupportedOperationException("Not implemented yet");
+        Map<?, ?> result = readResult(send(query));
+
+        Map<?, ?> meta = asMap(result.get("meta"), "meta");
+
+        return meta.get("last_row_id");
     }
 
     @Override
@@ -136,5 +170,15 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
         Map<?, ?> error = asMap(body.get("error"), "error");
 
         throw new CdatraException(error.get("code") + ": " + error.get("message"));
+    }
+
+    private List<?> asList (Object value, String name) {
+
+        if (value instanceof List<?>) {
+
+            return (List<?>) value;
+        }
+
+        throw new CdatraException("Invalid D1 Worker response: expected " + name);
     }
 }
