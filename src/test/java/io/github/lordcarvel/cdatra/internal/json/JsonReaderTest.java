@@ -622,6 +622,81 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsListsWithSeveralValues () {
+
+        assertEquals(List.of(1L, 2L, 3L), new JsonReader("[1,2,3]").read());
+        assertEquals(Arrays.asList(1L, "Ana", true, null, 1.5), new JsonReader("[1,\"Ana\",true,null,1.5]").read());
+    }
+
+    @Test
+    void acceptsWhitespaceAroundTheCommas () {
+
+        assertEquals(List.of(1L, 2L), new JsonReader("[1, 2]").read());
+        assertEquals(List.of(1L, 2L), new JsonReader("[ 1 , 2 ]").read());
+        assertEquals(List.of(1L, 2L), new JsonReader("[\n  1,\n  2\n]").read());
+    }
+
+    @Test
+    void readsRowsInTheWorkerFormat () {
+
+        assertEquals(List.of(List.of(1L, "Ana"), List.of(2L, "Bia")), new JsonReader("[[1, \"Ana\"], [2, \"Bia\"]]").read());
+    }
+
+    @Test
+    void commaInsideAStringDoesNotSeparateValues () {
+
+        assertEquals(List.of("a,b"), new JsonReader("[\"a,b\"]").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'[1 2]'|3",
+            "'[1:2]'|2",
+            "'[\"a\" \"b\"]'|5",
+            "'[[1] 2]'|5"
+    })
+    void rejectsValuesWithoutACommaBetweenThem (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Expected ',' or ']' at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'[1,]'|3",
+            "'[1, ]'|4",
+            "'[,1]'|1",
+            "'[1,,2]'|3"
+    })
+    void rejectsCommasWithoutAValue (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected JSON value at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'[1,'|0",
+            "'[1, '|0",
+            "'[1,2'|0",
+            "'[[1,2],'|0"
+    })
+    void rejectsListsThatEndAfterAComma (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated list at position " + position, error.getMessage());
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");

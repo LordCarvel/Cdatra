@@ -93,20 +93,32 @@ public class JsonReader {
             return results;
         }
 
-        if (position >= text.length()) {
+        while (position < text.length()) {
 
-            throw new IllegalArgumentException("Unterminated list at position " + start);
-        }
+            results.add(readValue());
 
-        results.add(readValue());
+            skipWhitespace();
 
-        skipWhitespace();
+            if (position < text.length() && text.charAt(position) == ']') {
 
-        if (position < text.length() && text.charAt(position) == ']') {
+                position = position + 1;
+
+                return results;
+            }
+
+            if (position >= text.length()) {
+
+                break;
+            }
+
+            if (text.charAt(position) != ',') {
+
+                throw new IllegalArgumentException("Expected ',' or ']' at position " + position);
+            }
 
             position = position + 1;
 
-            return results;
+            skipWhitespace();
         }
 
         throw new IllegalArgumentException("Unterminated list at position " + start);
