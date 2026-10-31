@@ -198,6 +198,15 @@ public class JsonReader {
                     throw new IllegalArgumentException("Unterminated string at position " + start);
                 }
 
+                if (text.charAt(position) == 'u') {
+
+                    position = position + 1;
+
+                    result.append(readUnicodeEscape());
+
+                    continue;
+                }
+
                 result.append(unescape(text.charAt(position)));
 
                 position = position + 1;
@@ -256,5 +265,44 @@ public class JsonReader {
     private boolean isControl (char c) {
 
         return c < 32;
+    }
+
+    private char readUnicodeEscape () {
+
+        int value = 0;
+
+        for (int digit = 0; digit < 4; digit++) {
+
+            if (position >= text.length()) {
+
+                throw new IllegalArgumentException("Invalid unicode escape at position " + position);
+            }
+
+            value = value * 16 + hexValue(text.charAt(position));
+
+            position = position + 1;
+        }
+
+        return (char) value;
+    }
+
+    private int hexValue (char c) {
+
+        if (isDigit(c)) {
+
+            return c - '0';
+        }
+
+        if (c >= 'a' && c <= 'f') {
+
+            return c - 'a' + 10;
+        }
+
+        if (c >= 'A' && c <= 'F') {
+
+            return c - 'A' + 10;
+        }
+
+        throw new IllegalArgumentException("Invalid unicode escape at position " + position);
     }
 }

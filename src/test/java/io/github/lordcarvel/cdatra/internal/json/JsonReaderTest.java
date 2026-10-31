@@ -420,6 +420,82 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsUnicodeEscapes () {
+
+        assertEquals("A", new JsonReader("\"\\u0041\"").read());
+        assertEquals("café", new JsonReader("\"caf\\u00e9\"").read());
+        assertEquals("café", new JsonReader("\"caf\\u00E9\"").read());
+        assertEquals("\u0000", new JsonReader("\"\\u0000\"").read());
+        assertEquals("\uFFFF", new JsonReader("\"\\uFFFF\"").read());
+    }
+
+    @Test
+    void unicodeEscapeReadsExactlyFourDigits () {
+
+        assertEquals("A1", new JsonReader("\"\\u00411\"").read());
+        assertEquals("ABC", new JsonReader("\"\\u0041\\u0042\\u0043\"").read());
+    }
+
+    @Test
+    void unicodeEscapeCanWriteAControlCharacter () {
+
+        assertEquals("a\nb", new JsonReader("\"a\\u000Ab\"").read());
+    }
+
+    @Test
+    void twoUnicodeEscapesFormAnEmoji () {
+
+        assertEquals("😀", new JsonReader("\"\\uD83D\\uDE00\"").read());
+    }
+
+    @Test
+    void readsControlCharactersWrittenByJsonWriter () {
+
+        String original = "a\u0001b\u001Fc";
+
+        String json = new JsonWriter().write(original);
+
+        assertEquals(original, new JsonReader(json).read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'\"\\u12g4\"'|5",
+            "'\"\\u12\"'|5",
+            "'\"\\u12'|5",
+            "'\"\\u'|3",
+            "'\"\\u+123\"'|3"
+    })
+    void rejectsInvalidUnicodeEscapesNamingWhereTheyAre (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid unicode escape at position " + position, error.getMessage());
+    }
+
+    @Test
+    void unicodeEscapeRejectsDigitsFromOtherAlphabets () {
+
+        JsonReader reader = new JsonReader("\"\\u\u0660000\"");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid unicode escape at position 3", error.getMessage());
+    }
+
+    @Test
+    void uppercaseUIsNotAUnicodeEscape () {
+
+        JsonReader reader = new JsonReader("\"\\U0041\"");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid escape at position 2", error.getMessage());
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
