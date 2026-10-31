@@ -2,6 +2,7 @@ package io.github.lordcarvel.cdatra.repository;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
 import io.github.lordcarvel.cdatra.example.User;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.query.LogicalOperator;
 import io.github.lordcarvel.cdatra.query.Operator;
@@ -22,7 +23,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -151,7 +151,7 @@ class RepositoryIntegrationTest {
         var item = new TestEntities.ManualRecord(42, "original");
         manual.save(item);
         assertEquals(42, item.id);
-        assertThrows(SQLException.class, () -> manual.save(new TestEntities.ManualRecord(42, "duplicate")));
+        assertThrows(CdatraException.class, () -> manual.save(new TestEntities.ManualRecord(42, "duplicate")));
         assertEquals("original", manual.findById(42).label);
         item.label = "updated";
         manual.update(item);
@@ -340,7 +340,7 @@ class RepositoryIntegrationTest {
         assertThrows(IllegalArgumentException.class, () -> repository.findBy("name", null, Operator.GREATER_THAN));
         assertThrows(IllegalArgumentException.class, () -> repository.findByConditions(List.of()));
         assertThrows(IllegalArgumentException.class, () -> repository.findByFilters(List.of()));
-        assertThrows(SQLException.class, repository::createTable);
+        assertThrows(CdatraException.class, repository::createTable);
         assertEquals(Set.of(1, 2, 3), ids(repository.findAll()));
     }
 
@@ -354,8 +354,8 @@ class RepositoryIntegrationTest {
         repository.delete(missing);
         assertEquals(Set.of(1, 2, 3), ids(repository.findAll()));
         connection.close();
-        assertThrows(SQLException.class, repository::findAll);
-        assertThrows(SQLException.class, () -> repository.save(missing));
+        assertThrows(CdatraException.class, repository::findAll);
+        assertThrows(CdatraException.class, () -> repository.save(missing));
     }
 
     @Test

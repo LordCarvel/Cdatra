@@ -17,7 +17,6 @@ import io.github.lordcarvel.cdatra.sql.SqlQuery;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +55,7 @@ public class Repository<T> {
         this.sqlGenerator = new SqlGenerator(databaseAdapter.dialect());
     }
 
-    public void createTable () throws SQLException {
+    public void createTable () {
 
         Table table = buildTable();
         SqlQuery query = sqlGenerator.createTable(table);
@@ -64,7 +63,7 @@ public class Repository<T> {
         databaseAdapter.execute(query);
     }
 
-    public void save (T entity) throws IllegalAccessException, SQLException {
+    public void save (T entity) throws IllegalAccessException {
 
         List<Row> rows = valueAnalysis.analyze(entity);
         Table table = buildTable();
@@ -96,7 +95,7 @@ public class Repository<T> {
         return entities;
     }
 
-    public T findById (Object idValue) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public T findById (Object idValue) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
         String idColumnName = analysis.analyzeIdColumnName(type);
@@ -113,7 +112,7 @@ public class Repository<T> {
         return type.cast(objectMapper.map(result.get(0), type));
     }
 
-    public List<T> findBy (String columnName, Object value, Operator operator) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public List<T> findBy (String columnName, Object value, Operator operator) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
         Row row = new Row(columnName, value);
@@ -132,7 +131,7 @@ public class Repository<T> {
         return entities;
     }
 
-    public List<T> findByConditions (List<QueryCondition> conditions) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public List<T> findByConditions (List<QueryCondition> conditions) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
 
@@ -152,7 +151,7 @@ public class Repository<T> {
         return entities;
     }
 
-    public List<T> findByFilters (List<QueryFilter> filters) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public List<T> findByFilters (List<QueryFilter> filters) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         Table table = buildTable();
 
@@ -172,7 +171,7 @@ public class Repository<T> {
         return entities;
     }
 
-    public void update (T entity) throws IllegalAccessException, SQLException {
+    public void update (T entity) throws IllegalAccessException {
 
         List<Row> rows = valueAnalysis.analyze(entity);
         Row idRow = valueAnalysis.analyzeId(entity);
@@ -195,7 +194,7 @@ public class Repository<T> {
         databaseAdapter.execute(query);
     }
 
-    public void delete (T entity) throws IllegalAccessException, SQLException {
+    public void delete (T entity) throws IllegalAccessException {
 
         Row idRow = valueAnalysis.analyzeId(entity);
         Table table = buildTable();

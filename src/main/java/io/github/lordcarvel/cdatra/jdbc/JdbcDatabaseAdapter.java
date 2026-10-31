@@ -1,6 +1,7 @@
 package io.github.lordcarvel.cdatra.jdbc;
 
 import io.github.lordcarvel.cdatra.adapter.DatabaseAdapter;
+import io.github.lordcarvel.cdatra.exception.CdatraException;
 import io.github.lordcarvel.cdatra.mapping.Row;
 import io.github.lordcarvel.cdatra.sql.SqlQuery;
 import io.github.lordcarvel.cdatra.sql.dialect.H2Dialect;
@@ -40,21 +41,39 @@ public class JdbcDatabaseAdapter implements DatabaseAdapter {
     }
 
     @Override
-    public void execute (SqlQuery query) throws SQLException {
+    public void execute (SqlQuery query) {
 
-        sqlExecutor.execute(connection, query);
+        try {
+
+            sqlExecutor.execute(connection, query);
+        } catch (SQLException e) {
+
+            throw new CdatraException("Failed to execute query", e);
+        }
     }
 
     @Override
-    public List<List<Row>> query (SqlQuery query) throws SQLException {
+    public List<List<Row>> query (SqlQuery query) {
 
-        return sqlExecutor.query(connection, query);
+        try {
+
+            return sqlExecutor.query(connection, query);
+        } catch (SQLException e) {
+
+            throw new CdatraException("Failed to execute query", e);
+        }
     }
 
     @Override
-    public Object executeAndReturnGeneratedKey (SqlQuery query) throws SQLException {
+    public Object executeAndReturnGeneratedKey (SqlQuery query) {
 
-        return sqlExecutor.executeAndReturnGeneratedKey(connection, query);
+        try {
+
+            return sqlExecutor.executeAndReturnGeneratedKey(connection, query);
+        } catch (SQLException e) {
+
+            throw new CdatraException("Failed to execute query", e);
+        }
     }
 
     @Override
