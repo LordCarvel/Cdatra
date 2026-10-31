@@ -93,6 +93,22 @@ public class JsonReader {
             return results;
         }
 
+        if (position >= text.length()) {
+
+            throw new IllegalArgumentException("Unterminated list at position " + start);
+        }
+
+        results.add(readValue());
+
+        skipWhitespace();
+
+        if (position < text.length() && text.charAt(position) == ']') {
+
+            position = position + 1;
+
+            return results;
+        }
+
         throw new IllegalArgumentException("Unterminated list at position " + start);
     }
 

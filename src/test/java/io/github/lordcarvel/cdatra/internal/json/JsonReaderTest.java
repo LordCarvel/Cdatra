@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -544,6 +545,80 @@ class JsonReaderTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
 
         assertEquals("Unexpected JSON value at position 0", error.getMessage());
+    }
+
+    @Test
+    void readsListsWithOneValueOfAnyType () {
+
+        assertEquals(List.of(1L), new JsonReader("[1]").read());
+        assertEquals(List.of(1.5), new JsonReader("[1.5]").read());
+        assertEquals(List.of("ab"), new JsonReader("[\"ab\"]").read());
+        assertEquals(List.of(true), new JsonReader("[true]").read());
+        assertEquals(Arrays.asList((Object) null), new JsonReader("[null]").read());
+    }
+
+    @Test
+    void readsListsInsideLists () {
+
+        assertEquals(List.of(List.of()), new JsonReader("[[]]").read());
+        assertEquals(List.of(List.of(7L)), new JsonReader("[[7]]").read());
+        assertEquals(List.of(List.of(List.of("a"))), new JsonReader("[[[\"a\"]]]").read());
+    }
+
+    @Test
+    void acceptsWhitespaceAroundTheValueInTheList () {
+
+        assertEquals(List.of(1L), new JsonReader("[ 1 ]").read());
+        assertEquals(List.of(List.of(1L)), new JsonReader("[ [ 1 ] ]").read());
+    }
+
+    @Test
+    void closingBracketInsideAStringDoesNotCloseTheList () {
+
+        assertEquals(List.of("]"), new JsonReader("[\"]\"]").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'[1'|0",
+            "'[1 '|0",
+            "' [1'|1",
+            "'[[]'|0",
+            "'[[1]'|0",
+            "'[['|1"
+    })
+    void rejectsUnterminatedListsWithValues (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated list at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'[x]'|1",
+            "'[,]'|1",
+            "'[ }]'|2"
+    })
+    void rejectsInvalidValuesInsideTheList (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected JSON value at position " + position, error.getMessage());
+    }
+
+    @Test
+    void rejectsContentAfterTheListWithAValue () {
+
+        JsonReader reader = new JsonReader("[1]x");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected content at position 3", error.getMessage());
     }
 
     @Test
