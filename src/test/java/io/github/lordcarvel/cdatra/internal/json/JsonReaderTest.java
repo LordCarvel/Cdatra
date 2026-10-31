@@ -5,6 +5,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JsonReaderTest {
@@ -493,6 +495,55 @@ class JsonReaderTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
 
         assertEquals("Invalid escape at position 2", error.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[]", "[ ]", "[ \n\t ]"})
+    void readsEmptyLists (String text) {
+
+        assertEquals(List.of(), new JsonReader(text).read());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {" []", "\n  [ ]  "})
+    void readsListsThatDoNotStartAtPositionZero (String text) {
+
+        assertEquals(List.of(), new JsonReader(text).read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'['|0",
+            "'[  '|0",
+            "' ['|1"
+    })
+    void rejectsUnterminatedListsNamingWhereTheyStart (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated list at position " + position, error.getMessage());
+    }
+
+    @Test
+    void rejectsContentAfterTheList () {
+
+        JsonReader reader = new JsonReader("[]x");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected content at position 2", error.getMessage());
+    }
+
+    @Test
+    void closingBracketAloneIsNotAValue () {
+
+        JsonReader reader = new JsonReader("]");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unexpected JSON value at position 0", error.getMessage());
     }
 
     @Test

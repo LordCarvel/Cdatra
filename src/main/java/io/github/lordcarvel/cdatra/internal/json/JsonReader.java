@@ -1,5 +1,8 @@
 package io.github.lordcarvel.cdatra.internal.json;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class JsonReader {
 
     private final String text;
@@ -65,7 +68,32 @@ public class JsonReader {
             return readString();
         }
 
+        if (text.startsWith("[", position)) {
+
+            return readList();
+        }
+
         throw new IllegalArgumentException("Unexpected JSON value at position " + position);
+    }
+
+    private List<Object> readList () {
+
+        int start = position;
+
+        position = position + 1;
+
+        List<Object> results = new ArrayList<>();
+
+        skipWhitespace();
+
+        if (position < text.length() && text.charAt(position) == ']') {
+
+            position = position + 1;
+
+            return results;
+        }
+
+        throw new IllegalArgumentException("Unterminated list at position " + start);
     }
 
     private boolean isWhitespace (char c) {
