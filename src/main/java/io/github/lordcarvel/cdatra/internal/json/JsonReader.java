@@ -189,11 +189,62 @@ public class JsonReader {
                 return result.toString();
             }
 
+            if (c == '\\') {
+
+                position = position + 1;
+
+                if (position >= text.length()) {
+
+                    throw new IllegalArgumentException("Unterminated string at position " + start);
+                }
+
+                result.append(unescape(text.charAt(position)));
+
+                position = position + 1;
+
+                continue;
+            }
+
             result.append(c);
 
             position = position + 1;
         }
 
         throw new IllegalArgumentException("Unterminated string at position " + start);
+    }
+
+    private char unescape (char c) {
+
+        if (c == '"' || c == '\\' || c == '/') {
+
+            return c;
+        }
+
+        if (c == 'b') {
+
+            return '\b';
+        }
+
+        if (c == 'f') {
+
+            return '\f';
+        }
+
+        if (c == 'n') {
+
+            return '\n';
+        }
+
+        if (c == 'r') {
+
+            return '\r';
+        }
+
+        if (c == 't') {
+
+            return '\t';
+        }
+
+        throw new IllegalArgumentException("Invalid escape at position " + position);
     }
 }

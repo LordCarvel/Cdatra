@@ -325,6 +325,63 @@ class JsonReaderTest {
     }
 
     @Test
+    void readsSimpleEscapes () {
+
+        assertEquals("a\"b", new JsonReader("\"a\\\"b\"").read());
+        assertEquals("a\\b", new JsonReader("\"a\\\\b\"").read());
+        assertEquals("a/b", new JsonReader("\"a\\/b\"").read());
+        assertEquals("a\bb", new JsonReader("\"a\\bb\"").read());
+        assertEquals("a\fb", new JsonReader("\"a\\fb\"").read());
+        assertEquals("a\nb", new JsonReader("\"a\\nb\"").read());
+        assertEquals("a\rb", new JsonReader("\"a\\rb\"").read());
+        assertEquals("a\tb", new JsonReader("\"a\\tb\"").read());
+    }
+
+    @Test
+    void readsConsecutiveEscapes () {
+
+        assertEquals("\n\t", new JsonReader("\"\\n\\t\"").read());
+        assertEquals("\\\\", new JsonReader("\"\\\\\\\\\"").read());
+        assertEquals("\"\"", new JsonReader("\"\\\"\\\"\"").read());
+    }
+
+    @Test
+    void escapedBackslashDoesNotHideTheClosingQuote () {
+
+        assertEquals("a\\", new JsonReader("\"a\\\\\"").read());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'\"ab\\'|0",
+            "'\"a\\\"'|0",
+            "' \"\\'|1"
+    })
+    void rejectsStringsThatEndInsideAnEscape (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Unterminated string at position " + position, error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "'\"\\x\"'|2",
+            "'\"a\\q\"'|3",
+            "'\"\\N\"'|2"
+    })
+    void rejectsInvalidEscapesNamingWhereTheyAre (String text, int position) {
+
+        JsonReader reader = new JsonReader(text);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, reader::read);
+
+        assertEquals("Invalid escape at position " + position, error.getMessage());
+    }
+
+    @Test
     void errorMessageNamesThePosition () {
 
         JsonReader reader = new JsonReader("nullx");
