@@ -24,6 +24,8 @@ import java.util.List;
 
 public class D1DatabaseAdapter implements DatabaseAdapter {
 
+    private static final long MAX_SAFE_INTEGER = 9007199254740991L;
+
     private final String url;
     private final String secret;
 
@@ -114,7 +116,7 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
         Map<String, Object> body = new LinkedHashMap<>();
 
         body.put("sql", query.getSql());
-        body.put("params", query.getParameters());
+        body.put("params", toWorkerValues(query.getParameters()));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url + "/v1/query"))
@@ -180,5 +182,42 @@ public class D1DatabaseAdapter implements DatabaseAdapter {
         }
 
         throw new CdatraException("Invalid D1 Worker response: expected " + name);
+    }
+
+    private Object toWorkerValue (Object value) {
+
+        if (value instanceof Boolean) {
+
+            if ((Boolean) value) {
+
+                return 1L;
+            }
+
+            return 0L;
+        }
+
+        if (value instanceof Long) {
+
+            long number = (Long) value;
+
+            if (number > MAX_SAFE_INTEGER || number < -MAX_SAFE_INTEGER) {
+
+                throw new IllegalArgumentException("Long value would lose precision in D1: " + number);
+            }
+        }
+
+        return value;
+    }
+
+    private List<Object> toWorkerValues (List<Object> parameters) {
+
+        List<Object> values = new ArrayList<>();
+
+        for (Object parameter : parameters) {
+
+            values.add(toWorkerValue(parameter));
+        }
+
+        return values;
     }
 }
