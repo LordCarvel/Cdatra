@@ -1,0 +1,8 @@
+name = "cdatra-worker"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cdatra"
+database_id = "00000000-0000-0000-0000-000000000000"
