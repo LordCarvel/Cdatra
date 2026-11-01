@@ -27,6 +27,11 @@ export default {
 
     fetch (request, env) {
 
+        if (!env.CDATRA_SECRET) {
+
+            return errorResponse(500, "INTERNAL", "Worker secret is not configured");
+        }
+
         return errorResponse(404, "NOT_FOUND", "Route not found");
     }
 };
