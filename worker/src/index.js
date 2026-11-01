@@ -23,6 +23,13 @@ function successResponse (result) {
     return Response.json(body);
 }
 
+async function sha256 (text) {
+
+    const bytes = new TextEncoder().encode(text);
+
+    return crypto.subtle.digest("SHA-256", bytes);
+}
+
 export default {
 
     fetch (request, env) {
