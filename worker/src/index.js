@@ -30,13 +30,31 @@ async function sha256 (text) {
     return crypto.subtle.digest("SHA-256", bytes);
 }
 
+async function isAuthorized (request, secret) {
+
+    const header = request.headers.get("Authorization");
+    const secretValue = "Bearer " + secret;
+
+    const headerHash = await sha256(header);
+    const secretHash = await sha256(secretValue);
+
+    return crypto.subtle.timingSafeEqual(headerHash, secretHash);
+}
+
 export default {
 
-    fetch (request, env) {
+    async fetch (request, env) {
 
         if (!env.CDATRA_SECRET) {
 
             return errorResponse(500, "INTERNAL", "Worker secret is not configured");
+        }
+
+        const authorized = await isAuthorized(request, env.CDATRA_SECRET);
+
+        if (!authorized) {
+
+            return errorResponse(401, "UNAUTHORIZED", "Invalid or missing secret");
         }
 
         return errorResponse(404, "NOT_FOUND", "Route not found");
