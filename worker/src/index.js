@@ -83,6 +83,20 @@ async function runQuery (statement) {
     };
 }
 
+async function runExecute (statement) {
+
+    const result = await statement.run();
+
+    return {
+
+        columns: [],
+        rows: [],
+        meta: {
+            last_row_id: result.meta.last_row_id
+        }
+    };
+}
+
 export default {
 
     async fetch (request, env) {
@@ -101,7 +115,7 @@ export default {
 
         const url = new URL(request.url);
 
-        if (url.pathname !== "/v1/query") {
+        if (url.pathname !== "/v1/query" && url.pathname !== "/v1/execute") {
 
             return errorResponse(404, "NOT_FOUND", "Route not found");
         }
@@ -114,6 +128,13 @@ export default {
         }
 
         const statement = prepareStatement(env.DB, body);
+
+        if (url.pathname === "/v1/execute") {
+
+            const result = await runExecute(statement);
+
+            return successResponse(result);
+        }
 
         const result = await runQuery(statement);
 
