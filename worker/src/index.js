@@ -41,6 +41,17 @@ async function isAuthorized (request, secret) {
     return crypto.subtle.timingSafeEqual(headerHash, secretHash);
 }
 
+async function readBody (request) {
+
+    try {
+
+        return await request.json();
+    } catch {
+
+        return null;
+    }
+}
+
 export default {
 
     async fetch (request, env) {
