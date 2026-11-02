@@ -45,11 +45,23 @@ async function readBody (request) {
 
     try {
 
-        return await request.json();
+        const body = await request.json();
+
+        if (!isValidBody(body)) {
+
+            return null;
+        }
+
+        return body;
     } catch {
 
         return null;
     }
+}
+
+function isValidBody (body) {
+
+    return body !== null && typeof body.sql === "string" && Array.isArray(body.params);
 }
 
 export default {
