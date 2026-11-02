@@ -69,6 +69,20 @@ function prepareStatement (db, body) {
     return db.prepare(body.sql).bind(...body.params);
 }
 
+async function runQuery (statement) {
+
+    const result = await statement.raw({ columnNames: true });
+
+    const [columns = [], ...rows] = result;
+
+    return {
+
+        columns: columns,
+        rows: rows,
+        meta: {}
+    };
+}
+
 export default {
 
     async fetch (request, env) {
