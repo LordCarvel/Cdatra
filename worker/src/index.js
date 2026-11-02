@@ -99,6 +99,24 @@ export default {
             return errorResponse(401, "UNAUTHORIZED", "Invalid or missing secret");
         }
 
-        return errorResponse(404, "NOT_FOUND", "Route not found");
+        const url = new URL(request.url);
+
+        if (url.pathname !== "/v1/query") {
+
+            return errorResponse(404, "NOT_FOUND", "Route not found");
+        }
+
+        const body = await readBody(request);
+
+        if (body === null) {
+
+            return errorResponse(400, "BAD_REQUEST", "Invalid request body");
+        }
+
+        const statement = prepareStatement(env.DB, body);
+
+        const result = await runQuery(statement);
+
+        return successResponse(result);
     }
 };
