@@ -64,6 +64,11 @@ function isValidBody (body) {
     return body !== null && typeof body.sql === "string" && Array.isArray(body.params);
 }
 
+function prepareStatement (db, body) {
+
+    return db.prepare(body.sql).bind(...body.params);
+}
+
 export default {
 
     async fetch (request, env) {
