@@ -127,17 +127,23 @@ export default {
             return errorResponse(400, "BAD_REQUEST", "Invalid request body");
         }
 
-        const statement = prepareStatement(env.DB, body);
+        try {
 
-        if (url.pathname === "/v1/execute") {
+            const statement = prepareStatement(env.DB, body);
 
-            const result = await runExecute(statement);
+            if (url.pathname === "/v1/execute") {
+
+                const result = await runExecute(statement);
+
+                return successResponse(result);
+            }
+
+            const result = await runQuery(statement);
 
             return successResponse(result);
+        } catch (error) {
+
+            return errorResponse(400, "SQL_ERROR", error.message);
         }
-
-        const result = await runQuery(statement);
-
-        return successResponse(result);
     }
 };
