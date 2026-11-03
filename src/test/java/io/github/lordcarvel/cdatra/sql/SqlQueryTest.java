@@ -124,6 +124,47 @@ class SqlQueryTest {
     }
 
     @Test
+    void rendersGroupsWithParenthesesAndKeepsParameterOrder () {
+
+        var idIsOne = new QueryFilter(new QueryCondition("id", 1, Operator.EQUAL), null);
+        var nameIsCarvel = new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.OR);
+        var idAboveTwo = new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), LogicalOperator.AND);
+        SqlQuery first = generator.selectByFilters(table, List.of(QueryFilter.group(List.of(idIsOne, nameIsCarvel), null), idAboveTwo));
+        assertEquals("SELECT * FROM people WHERE (id = ? OR name = ?) AND id > ?;", first.getSql());
+        assertEquals(List.of(1, "Carvel", 2), first.getParameters());
+        SqlQuery last = generator.selectByFilters(table, List.of(new QueryFilter(idAboveTwo.getCondition(), null),
+                QueryFilter.group(List.of(idIsOne, nameIsCarvel), LogicalOperator.AND)));
+        assertEquals("SELECT * FROM people WHERE id > ? AND (id = ? OR name = ?);", last.getSql());
+        assertEquals(List.of(2, 1, "Carvel"), last.getParameters());
+        SqlQuery single = generator.selectByFilters(table, List.of(QueryFilter.group(List.of(idIsOne), null)));
+        assertEquals("SELECT * FROM people WHERE (id = ?);", single.getSql());
+    }
+
+    @Test
+    void rendersGroupsInsideGroups () {
+
+        var idIsOne = new QueryFilter(new QueryCondition("id", 1, Operator.EQUAL), null);
+        var nameIsCarvel = new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.AND);
+        var inner = QueryFilter.group(List.of(idIsOne, nameIsCarvel), LogicalOperator.OR);
+        var outer = QueryFilter.group(List.of(new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), null), inner), null);
+        SqlQuery query = generator.selectByFilters(table, List.of(outer));
+        assertEquals("SELECT * FROM people WHERE (id > ? OR (id = ? AND name = ?));", query.getSql());
+        assertEquals(List.of(2, 1, "Carvel"), query.getParameters());
+    }
+
+    @Test
+    void rejectsInvalidGroups () {
+
+        var valid = new QueryFilter(new QueryCondition("id", 1, Operator.EQUAL), null);
+        assertThrows(IllegalArgumentException.class, () -> generator.selectByFilters(table, List.of(QueryFilter.group(List.of(), null))));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectByFilters(table, List.of(valid, QueryFilter.group(List.of(valid), null))));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectByFilters(table, List.of(QueryFilter.group(List.of(valid, valid), null))));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectByFilters(table,
+                List.of(QueryFilter.group(List.of(new QueryFilter(new QueryCondition("unknown", 1, Operator.EQUAL), null)), null))));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectByFilters(table, List.of(QueryFilter.group(null, null))));
+    }
+
+    @Test
     void rendersSelectAllAndIdSelection () {
 
         SqlQuery selectAll = generator.selectAll(table);

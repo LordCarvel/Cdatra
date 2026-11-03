@@ -573,6 +573,15 @@ public class SqlGenerator {
 
         sql.append("SELECT * FROM " + table.getName() + " WHERE ");
 
+        appendFilters(sql, table, filters);
+
+        sql.append(";");
+
+        return sql.build();
+    }
+
+    private void appendFilters (SqlBuilder sql, Table table, List<QueryFilter> filters) {
+
         for (int i = 0; i < filters.size();) {
 
             QueryFilter filter = filters.get(i);
@@ -580,13 +589,6 @@ public class SqlGenerator {
             if (filter == null) {
 
                 throw new IllegalArgumentException("Query filter cannot be null");
-            }
-
-            QueryCondition condition = filter.getCondition();
-
-            if (condition == null) {
-
-                throw new IllegalArgumentException("Query condition cannot be null");
             }
 
             if (i > 0) {
@@ -607,15 +609,32 @@ public class SqlGenerator {
                 }
             }
 
-            Row row = new Row(condition.getColumnName(), condition.getValue());
-            appendCondition(sql, table, row, condition.getOperator());
+            if (filter.getGroup() != null) {
+
+                if (filter.getGroup().isEmpty()) {
+
+                    throw new IllegalArgumentException("Query group cannot be empty");
+                }
+
+                sql.append("(");
+                appendFilters(sql, table, filter.getGroup());
+                sql.append(")");
+
+            } else {
+
+                QueryCondition condition = filter.getCondition();
+
+                if (condition == null) {
+
+                    throw new IllegalArgumentException("Query condition cannot be null");
+                }
+
+                Row row = new Row(condition.getColumnName(), condition.getValue());
+                appendCondition(sql, table, row, condition.getOperator());
+            }
 
             i = i + 1;
         }
-
-        sql.append(";");
-
-        return sql.build();
     }
 
     private void appendCondition (SqlBuilder sql, Table table, Row row, Operator operator) {

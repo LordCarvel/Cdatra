@@ -161,6 +161,17 @@ class RepositoryIntegrationTest {
     }
 
     @Test
+    void groupsChangeWhichRecordsAreFound () throws Exception {
+
+        seed();
+        var idIsOne = new QueryFilter(new QueryCondition("id", 1, Operator.EQUAL), null);
+        var nameIsCarvel = new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.OR);
+        var idAboveTwo = new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), LogicalOperator.AND);
+        assertEquals(Set.of(1, 3), ids(repository.findByFilters(List.of(idIsOne, nameIsCarvel, idAboveTwo))));
+        assertEquals(Set.of(3), ids(repository.findByFilters(List.of(QueryFilter.group(List.of(idIsOne, nameIsCarvel), null), idAboveTwo))));
+    }
+
+    @Test
     void likeTreatsThePatternAsValueNotSql () throws Exception {
 
         seed();
