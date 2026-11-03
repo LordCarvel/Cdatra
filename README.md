@@ -2,9 +2,12 @@
 
 ## O que é
 
-Cdatra é uma biblioteca de aprendizado em Java para reduzir o trabalho repetitivo
-com JDBC. A partir de uma classe anotada, cria tabelas, salva registros, faz
-consultas, atualiza e exclui dados usando `Repository<T>`.
+Cdatra é uma biblioteca em Java para reduzir o trabalho repetitivo de acesso a
+banco de dados. A partir de uma classe anotada, cria tabelas, salva registros,
+faz consultas, atualiza e exclui dados usando `Repository<T>`.
+
+Funciona com JDBC e com o **Cloudflare D1**. O mesmo `Repository` atende os dois;
+muda só o adapter que ele recebe.
 
 Uma entidade começa assim:
 
@@ -41,11 +44,13 @@ abaixo mostram os imports, a entidade completa e a abertura da conexão.
 
 - JDK 17.
 - Maven para compilar, instalar e executar os testes.
-- Uma conexão JDBC e o driver do banco no classpath da aplicação.
+- Uma conexão JDBC e o driver do banco no classpath da aplicação, ou um Worker
+  do Cloudflare D1 publicado (veja [Usando o Cloudflare D1](#usando-o-cloudflare-d1)).
 
-O ambiente validado usa Java 17, Maven 3.9.14 e **H2 2.5.250 em memória**.
-H2 é o banco atualmente testado para a v0.0.1. O projeto inclui esse driver como
-dependência de runtime e usa JUnit 5.11.4 nos testes.
+O ambiente validado usa Java 17, Maven 3.9.14, **H2 2.5.250 em memória** e
+**Cloudflare D1**. O projeto inclui o driver do H2 como dependência de runtime e
+usa JUnit 5.11.4 nos testes. O acesso ao D1 não adiciona dependências: usa o
+`java.net.http.HttpClient` do JDK e um leitor de JSON próprio.
 
 ## Instalação
 
@@ -63,7 +68,7 @@ Depois, adicione esta dependência ao `pom.xml` da sua aplicação:
 <dependency>
     <groupId>org.com.dev.carvel</groupId>
     <artifactId>Cdatra</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
@@ -71,7 +76,7 @@ Essas são as coordenadas Maven atuais. Os packages Java usam a raiz
 `io.github.lordcarvel.cdatra`. A instalação descrita usa o build local; não
 pressupõe publicação no Maven Central.
 
-O build gera `target/Cdatra-0.0.1.jar`. Esse JAR não contém suas dependências;
+O build gera `target/Cdatra-0.0.2.jar`. Esse JAR não contém suas dependências;
 num projeto Maven, o driver H2 é resolvido pela dependência de runtime.
 
 ## Primeira entidade
@@ -129,7 +134,7 @@ acessível. Os campos anotados podem ser privados: o mapeamento usa reflexão.
 Campos sem `@Column` são ignorados.
 
 Os atributos se chamam **`tableNaame`** e **`columName`** na API atual. Use essa
-grafia nos exemplos da v0.0.1.
+grafia nos exemplos.
 
 ## Criando Repository
 
@@ -169,9 +174,9 @@ public class Main {
 ```
 
 O banco desse exemplo existe em memória enquanto a conexão estiver aberta.
-Quem fornece a conexão é responsável por fechá-la. As operações podem lançar
-exceções JDBC e de reflexão; o exemplo usa `throws Exception` para manter o foco
-no fluxo básico.
+Quem fornece a conexão é responsável por fechá-la. O `throws Exception` do exemplo
+existe por causa do `DriverManager.getConnection`: as operações do `Repository`
+não declaram exceções checadas (veja [Erros](#erros)).
 
 As próximas seções mostram trechos de uso dentro de uma conexão aberta. São
 exemplos separados; não é necessário criar a mesma tabela novamente depois de
@@ -254,7 +259,7 @@ resultado indicando se algum registro foi removido.
 
 ## Consultas com operadores
 
-Importe `io.github.lordcarvel.cdatra.query.Operator`. A v0.0.1 suporta:
+Importe `io.github.lordcarvel.cdatra.query.Operator`. Os operadores disponíveis são:
 
 | Operador | Comparação SQL |
 | --- | --- |
@@ -264,6 +269,7 @@ Importe `io.github.lordcarvel.cdatra.query.Operator`. A v0.0.1 suporta:
 | `Operator.LESS_THAN` | `<` |
 | `Operator.GREATER_THAN_OR_EQUAL` | `>=` |
 | `Operator.LESS_THAN_OR_EQUAL` | `<=` |
+| `Operator.LIKE` | `LIKE` |
 
 Exemplo:
 
@@ -290,6 +296,16 @@ List<User> withoutName = repository.findBy("name", null, Operator.EQUAL);
 
 Comparações de ordem com null são rejeitadas. O valor precisa ter um tipo
 compatível com a coluna: para um ID `int`, use `10`; para um ID `long`, use `10L`.
+
+`LIKE` busca por parte de um texto. Quem chama escreve os curingas: `%` vale por
+qualquer sequência de caracteres, e `_`, por exatamente um.
+
+```java
+List<User> users = repository.findBy("name", "Car%", Operator.LIKE);
+```
+
+O valor precisa ser um texto; `null` e números são recusados. O comportamento
+depende do banco: veja as diferenças em [Limitações](#limitações).
 
 ## Consultas AND/OR
 
@@ -336,8 +352,95 @@ tem condição anterior, então seu operador é ignorado e pode ser `null`. A pa
 do segundo filtro, o operador lógico é obrigatório.
 
 Listas de condições ou filtros precisam ter pelo menos um elemento. Na mistura
-de AND e OR, vale a precedência nativa do SQL: AND é avaliado antes de OR. A API
-não oferece agrupamento explícito por parênteses.
+de AND e OR, vale a precedência nativa do SQL: AND é avaliado antes de OR.
+
+Para mudar essa ordem, agrupe filtros com `QueryFilter.group`. Cada grupo vira um
+par de parênteses:
+
+```java
+QueryFilter idIsOne = new QueryFilter(new QueryCondition("id", 1, Operator.EQUAL), null);
+QueryFilter nameIsCarvel = new QueryFilter(new QueryCondition("name", "Carvel", Operator.EQUAL), LogicalOperator.OR);
+QueryFilter idAboveTwo = new QueryFilter(new QueryCondition("id", 2, Operator.GREATER_THAN), LogicalOperator.AND);
+
+List<User> users = repository.findByFilters(List.of(
+        QueryFilter.group(List.of(idIsOne, nameIsCarvel), null),
+        idAboveTwo
+));
+```
+
+Representa `(id = 1 OR name = 'Carvel') AND id > 2`. O operador lógico do grupo o
+liga ao filtro anterior, como em um filtro comum. Um grupo pode conter outros
+grupos, mas não pode ficar vazio.
+
+## Usando o Cloudflare D1
+
+A aplicação Java não fala direto com o D1: ela envia os comandos por HTTP a um
+Worker próprio, que tem acesso ao banco. Assim, a aplicação guarda apenas o segredo
+desse Worker, e não um token com poder sobre a conta da Cloudflare. O código do
+Worker está na pasta `worker/`.
+
+### Publicando o Worker
+
+Dentro de `worker/`, entre na sua conta e crie o banco:
+
+```shell
+npx wrangler login
+npx wrangler d1 create cdatra
+```
+
+Coloque o `database_id` mostrado pelo comando em `worker/wrangler.toml`. Depois
+publique o Worker e configure o segredo:
+
+```shell
+npx wrangler deploy
+npx wrangler secret put CDATRA_SECRET
+```
+
+Enquanto o segredo não existir, o Worker recusa todos os pedidos. Use um valor
+longo e aleatório, e não o coloque no código nem no git.
+
+Em um repositório público, não é preciso publicar os dados da conta: copie o
+arquivo para `worker/wrangler.prod.toml`, que o git ignora, coloque os valores
+reais nele e publique com `npx wrangler deploy --config wrangler.prod.toml`.
+
+Para testar sem usar a conta da Cloudflare, crie `worker/.dev.vars`, também
+ignorado pelo git, com `CDATRA_SECRET=<um valor de teste>`, e rode
+`npx wrangler dev`. O banco fica na sua máquina.
+
+### Conectando a aplicação
+
+Crie um `D1DatabaseAdapter` com a URL do Worker e o segredo, e entregue-o ao
+`Repository` no lugar da conexão:
+
+```java
+import io.github.lordcarvel.cdatra.d1.D1DatabaseAdapter;
+import io.github.lordcarvel.cdatra.repository.Repository;
+
+D1DatabaseAdapter adapter = new D1DatabaseAdapter(
+        System.getenv("CDATRA_WORKER_URL"),
+        System.getenv("CDATRA_SECRET")
+);
+
+Repository<User> repository = new Repository<>(User.class, adapter);
+
+repository.createTable();
+repository.save(new User("Carvel"));
+
+List<User> users = repository.findAll();
+```
+
+O adapter escolhe o dialeto do banco, então o `createTable` já gera SQL do D1. O
+restante da API é igual: as seções anteriores valem para os dois bancos.
+
+## Erros
+
+Todas as falhas do banco chegam como `CdatraException`
+(`io.github.lordcarvel.cdatra.exception`), uma exceção não checada. No JDBC, o
+erro original fica como causa. No D1, a mensagem traz o código do Worker e o texto
+do banco, por exemplo `SQL_ERROR: D1_ERROR: no such table: users: SQLITE_ERROR`.
+
+Uso incorreto da API, como coluna inexistente ou valor de tipo incompatível, gera
+`IllegalArgumentException` antes de ir ao banco.
 
 ## Annotations
 
@@ -358,24 +461,27 @@ por ID exigem `@Id`. A tabela precisa ter pelo menos uma coluna anotada.
 
 ## Tipos suportados
 
-| Tipo Java | Tipo SQL |
-| --- | --- |
-| `int`, `Integer` | `INTEGER` |
-| `long`, `Long` | `BIGINT` |
-| `boolean`, `Boolean` | `BOOLEAN` |
-| `double`, `Double` | `DOUBLE` |
-| `String` | `VARCHAR` |
+| Tipo Java | Tipo SQL no H2 | Tipo SQL no D1 |
+| --- | --- | --- |
+| `int`, `Integer` | `INTEGER` | `INTEGER` |
+| `long`, `Long` | `BIGINT` | `INTEGER` |
+| `boolean`, `Boolean` | `BOOLEAN` | `INTEGER` |
+| `double`, `Double` | `DOUBLE` | `REAL` |
+| `String` | `VARCHAR` | `TEXT` |
 
 Campos objeto podem receber null; campos primitivos não podem receber NULL do
-banco. NaN e infinidades são rejeitados. Não há conversão automática geral de
-tipos, suporte a datas, BigDecimal, enums, coleções ou objetos relacionados como
-colunas.
+banco. NaN e infinidades são rejeitados. Não há suporte a datas, BigDecimal,
+enums, coleções ou objetos relacionados como colunas.
 
-## Limitações da v0.0.1
+Na leitura, o valor é convertido para o tipo do campo quando o banco devolve outro
+tipo, como o D1, que devolve `boolean` como número. Um número que não cabe no
+campo é recusado, e não cortado.
 
-O escopo validado é Java 17 com H2 2.5.250 em memória. Não foram certificados
-PostgreSQL, MySQL, SQLite, acesso simultâneo por threads, persistência em disco,
-falhas de rede ou desempenho em produção.
+## Limitações
+
+O escopo validado é Java 17 com H2 2.5.250 em memória e com o Cloudflare D1. Não
+foram certificados PostgreSQL, MySQL, SQLite direto, acesso simultâneo por threads,
+persistência em disco no H2 ou desempenho em produção.
 
 A versão atual tem estes limites:
 
@@ -383,23 +489,36 @@ A versão atual tem estes limites:
 - Uma única coluna de ID; sem chave primária composta.
 - Nomes de tabela e coluna seguem `[A-Za-z_][A-Za-z0-9_]*`. Não há quoting de
   identificadores ou nomes qualificados por schema; evite palavras reservadas.
-- SQL gerado como texto, com validação de nomes e tipos e escape de apóstrofos.
-  Não há uma API de parâmetros JDBC para os valores.
-- Sem conversão geral de tipos ou seleção parcial de campos pelo Repository.
-- Commit e rollback pertencem ao chamador. O Repository usa a configuração de
-  transação da conexão recebida e não inicia nem confirma transações sozinho.
+- Valores vão sempre como parâmetros (`?`), nunca no texto do SQL. Nomes de tabela
+  e coluna não podem ser parâmetros; por isso são validados.
+- Sem seleção parcial de campos pelo Repository.
+- No JDBC, commit e rollback pertencem ao chamador. O Repository usa a configuração
+  de transação da conexão recebida e não inicia nem confirma transações sozinho.
+
+No Cloudflare D1:
+
+- Não há transações. Cada comando é independente, e a lib não oferece comandos em
+  lote.
+- `long` só é aceito até ±(2⁵³ − 1). Valores maiores são recusados antes do envio,
+  porque o Worker é JavaScript e perderia precisão.
+- `LIKE` ignora maiúsculas e minúsculas só nas letras sem acento: `car%` acha
+  `Carvel`, mas `JOÃO` não acha `João`. No H2, ele sempre diferencia.
+- O padrão do `LIKE` aceita no máximo 50 bytes; acima disso, vem `SQL_ERROR`.
+- Cada comando é uma chamada HTTP. Fora da Cloudflare, isso custa mais tempo do
+  que um banco na mesma rede.
+- Valem os [limites do D1](https://developers.cloudflare.com/d1/platform/limits/),
+  como o tamanho máximo do banco e o de cada linha.
 
 Os testes verificam CRUD, filtros, transações e visibilidade entre duas conexões,
 mas não garantem ausência de todo bug nem compatibilidade com outros bancos.
 
 ## Status da versão
 
-A versão do `pom.xml` é **0.0.1**. Esta preparação reúne versão e documentação,
-sem adicionar funcionalidades à biblioteca.
+A versão do `pom.xml` é **0.0.2**.
 
-Após a reorganização dos packages, os **224 casos distintos** passaram no build
-com cobertura e na repetição da auditoria: zero falhas, zero erros e nenhum teste
-ignorado. Para reproduzir:
+Nesta versão, os **582 testes** do Java passaram no build com cobertura e na
+repetição da auditoria: zero falhas, zero erros e nenhum teste ignorado. Para
+reproduzir:
 
 ```shell
 mvn -Pcoverage clean verify
@@ -416,7 +535,19 @@ O perfil `defect-audit` executa a mesma suíte e separa os resultados em
 `target/defect-audit-reports/`. A suíte padrão grava em `target/surefire-reports/`.
 O perfil `coverage` gera o relatório em `target/site/jacoco/index.html`.
 
-O [relatório das correções](docs/testing/v0.0.1-fixes.md) e suas
+Os 37 testes do Worker usam o `node:test`, sem dependências, e não rodam pelo Maven.
+Dentro de `worker/`:
+
+```shell
+npm test
+```
+
+Eles usam um banco falso. O caminho completo, do `Repository` ao D1, foi conferido
+manualmente com `wrangler dev` e com um banco real; essa conferência não faz parte
+das suítes.
+
+Os documentos da v0.0.1 continuam como histórico. O
+[relatório das correções](docs/testing/v0.0.1-fixes.md) e suas
 [evidências](docs/testing/v0.0.1-fixed-results.json) registram a revisão anterior
 à reorganização. O [relatório da auditoria inicial](docs/testing/v0.0.1-report.md)
 e seu [inventário](docs/testing/v0.0.1-results.json) permanecem como histórico.
@@ -424,7 +555,8 @@ Esses arquivos são fotografias das respectivas revisões, sem atualização
 automática pelo Maven.
 
 O código de produção está em `io.github.lordcarvel.cdatra`, nos packages
-`annotation`, `metadata`, `mapping`, `query`, `sql`, `jdbc` e `repository`.
+`adapter`, `annotation`, `d1`, `exception`, `internal`, `jdbc`, `mapping`,
+`metadata`, `query`, `repository` e `sql`. O package `internal` não é API pública.
 Os exemplos internos Main, User e Address ficam em `src/test/java`, no package
 `io.github.lordcarvel.cdatra.example`, e não fazem parte do JAR.
 
@@ -437,4 +569,4 @@ git diff
 ```
 
 O esperado é uma árvore de trabalho limpa e nenhuma alteração esquecida no
-diff. Este preparo não cria uma tag nem publica um pacote no Maven Central.
+diff. A biblioteca não é publicada no Maven Central.
