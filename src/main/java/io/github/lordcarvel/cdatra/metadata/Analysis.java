@@ -114,7 +114,7 @@ public class Analysis {
         }
 
         Entity entity = value.getAnnotation(Entity.class);
-        String tableName = entity.tableNaame();
+        String tableName = entity.name();
 
         if (tableName == null || !tableName.matches("[A-Za-z_][A-Za-z0-9_]*")) {
 

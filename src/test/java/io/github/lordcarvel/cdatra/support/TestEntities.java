@@ -11,7 +11,7 @@ public final class TestEntities {
 
     }
 
-    @Entity(tableNaame = "records")
+    @Entity(name = "records")
     public static class Record {
 
         @Id @GeneratedValue @Column(columName = "id") public int id;
@@ -37,7 +37,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "manual_records")
+    @Entity(name = "manual_records")
     public static class ManualRecord {
 
         @Id @Column(columName = "id") public int id;
@@ -54,7 +54,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "long_records")
+    @Entity(name = "long_records")
     public static class LongRecord {
 
         @Id @GeneratedValue @Column(columName = "id") public long id;
@@ -65,7 +65,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "text_records")
+    @Entity(name = "text_records")
     public static class TextRecord {
 
         @Id @Column(columName = "id") public String id;
@@ -82,7 +82,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "only_id")
+    @Entity(name = "only_id")
     public static class OnlyId {
 
         @Id @GeneratedValue @Column(columName = "id") public int id;
@@ -92,7 +92,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "no_id_records")
+    @Entity(name = "no_id_records")
     public static class NoId {
 
         @Column(columName = "label") public String label;
@@ -102,7 +102,7 @@ public final class TestEntities {
         }
     }
 
-    @Entity(tableNaame = "boxed_records")
+    @Entity(name = "boxed_records")
     public static class BoxedRecord {
 
         @Id @GeneratedValue @Column(columName = "id") public Integer id;
@@ -120,7 +120,7 @@ public final class TestEntities {
         @Id @Column(columName = "id") public int id;
     }
 
-    @Entity(tableNaame = "inherited_records")
+    @Entity(name = "inherited_records")
     public static class Child extends Parent {
 
         @Column(columName = "label") public String label;

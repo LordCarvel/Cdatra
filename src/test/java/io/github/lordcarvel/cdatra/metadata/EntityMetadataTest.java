@@ -111,7 +111,7 @@ class EntityMetadataTest {
         assertFalse(id.isGeneratedValue());
     }
 
-    @Entity(tableNaame = "no_id")
+    @Entity(name = "no_id")
     public static class NoId {
 
         @Column(columName = "name") public String name;

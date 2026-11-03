@@ -5,7 +5,7 @@ import io.github.lordcarvel.cdatra.annotation.Entity;
 import io.github.lordcarvel.cdatra.annotation.GeneratedValue;
 import io.github.lordcarvel.cdatra.annotation.Id;
 
-@Entity(tableNaame = "users")
+@Entity(name = "users")
 public class User {
 
     @Id
