@@ -144,6 +144,31 @@ class RepositoryIntegrationTest {
     }
 
     @Test
+    void evaluatesLikePatterns () throws Exception {
+
+        seed();
+        assertEquals(Set.of(1, 3), ids(repository.findBy("name", "Car%", Operator.LIKE)));
+        assertEquals(Set.of(2), ids(repository.findBy("name", "%ria", Operator.LIKE)));
+        assertEquals(Set.of(1, 3), ids(repository.findBy("name", "%arv%", Operator.LIKE)));
+        assertEquals(Set.of(2), ids(repository.findBy("name", "M_ria", Operator.LIKE)));
+        assertEquals(Set.of(1, 3), ids(repository.findBy("name", "Carvel", Operator.LIKE)));
+        assertTrue(repository.findBy("name", "Car", Operator.LIKE).isEmpty());
+        assertEquals(Set.of(3), ids(repository.findByConditions(List.of(new QueryCondition("name", "Car%", Operator.LIKE),
+                new QueryCondition("id", 1, Operator.GREATER_THAN)))));
+        assertEquals(Set.of(1, 2, 3), ids(repository.findByFilters(List.of(
+                new QueryFilter(new QueryCondition("name", "M%", Operator.LIKE), null),
+                new QueryFilter(new QueryCondition("name", "C%", Operator.LIKE), LogicalOperator.OR)))));
+    }
+
+    @Test
+    void likeTreatsThePatternAsValueNotSql () throws Exception {
+
+        seed();
+        assertTrue(repository.findBy("name", "%' OR '1'='1", Operator.LIKE).isEmpty());
+        assertEquals(Set.of(1, 2, 3), ids(repository.findAll()));
+    }
+
+    @Test
     void supportsManualKeysAndRejectsDuplicatePrimaryKeyWithoutLosingData () throws Exception {
 
         var manual = new Repository<>(TestEntities.ManualRecord.class, connection);

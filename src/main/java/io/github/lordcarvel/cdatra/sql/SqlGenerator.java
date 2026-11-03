@@ -684,6 +684,10 @@ public class SqlGenerator {
 
             sqlOperator = "<=";
 
+        } else if (operator == Operator.LIKE) {
+
+            sqlOperator = "LIKE";
+
         } else {
 
             throw new IllegalArgumentException("Unsupported operator: " + operator);
@@ -714,6 +718,11 @@ public class SqlGenerator {
             if (sqlType != columnType) {
 
                 throw new IllegalArgumentException("Invalid value type for column: " + row.getColumnName());
+            }
+
+            if (operator == Operator.LIKE && !(value instanceof String)) {
+
+                throw new IllegalArgumentException("LIKE only supports text values for column: " + row.getColumnName());
             }
 
             if (value instanceof Double && !Double.isFinite((Double) value)) {

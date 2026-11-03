@@ -55,6 +55,26 @@ class SqlQueryTest {
     }
 
     @Test
+    void rendersLikeWithThePatternAsParameter () {
+
+        SqlQuery query = generator.selectBy(table, new Row("name", "Car%"), Operator.LIKE);
+        assertEquals("SELECT * FROM people WHERE name LIKE ?;", query.getSql());
+        assertEquals(List.of("Car%"), query.getParameters());
+        SqlQuery conditions = generator.selectByConditions(table, List.of(new QueryCondition("name", "%vel", Operator.LIKE),
+                new QueryCondition("id", 1, Operator.GREATER_THAN)));
+        assertEquals("SELECT * FROM people WHERE name LIKE ? AND id > ?;", conditions.getSql());
+        assertEquals(List.of("%vel", 1), conditions.getParameters());
+    }
+
+    @Test
+    void rejectsLikeWithoutText () {
+
+        assertThrows(IllegalArgumentException.class, () -> generator.selectBy(table, new Row("name", null), Operator.LIKE));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectBy(table, new Row("id", 2), Operator.LIKE));
+        assertThrows(IllegalArgumentException.class, () -> generator.selectBy(table, new Row("id", "2%"), Operator.LIKE));
+    }
+
+    @Test
     void preservesSqlLookingTextAndEscapesQuotes () {
 
         String value = "D'Ávila; SELECT * FROM people WHERE 'x'='x' --";
